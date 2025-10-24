@@ -1,0 +1,116 @@
+---
+- name: Velero Restore Setup (Target Cluster)
+  hosts: all
+  become: yes
+  vars_files:
+    - group_vars/all.yml
+
+  tasks:
+    - name: Install Azure CLI
+      apt:
+        name: azure-cli
+        state: present
+        update_cache: yes
+
+    - name: Download Velero CLI
+      get_url:
+        url: "https://github.com/vmware-tanzu/velero/releases/download/{{ velero_version }}/velero-{{ velero_version }}-linux-amd64.tar.gz"
+        dest: /tmp/velero.tar.gz
+
+    - name: Extract Velero CLI
+      unarchive:
+        src: /tmp/velero.tar.gz
+        dest: /tmp/
+        remote_src: yes
+
+    - name: Move Velero binary
+      command: mv /tmp/velero-{{ velero_version }}-linux-amd64/velero /usr/local/bin/velero
+      args:
+        creates: /usr/local/bin/velero
+
+    - name: Set PATH and kubeconfig
+      lineinfile:
+        path: /root/.bashrc
+        line: 'export PATH=$PATH:/var/lib/rancher/rke2/bin/ && export KUBECONFIG=/etc/rancher/rke2/rke2.yaml'
+        create: yes
+
+    - name: Log into Azure
+      shell: |
+        az login --service-principal \
+          -u {{ azure_client_id }} \
+          -p {{ azure_client_secret }} \
+          --tenant {{ azure_tenant_id }}
+
+    - name: Set Azure subscription
+      command: az account set -s {{ azure_backup_subscription_id }}
+
+    - name: Create Velero credentials file
+      template:
+        src: credentials-velero.txt.j2
+        dest: /root/credentials-velero.txt
+        mode: 0600
+
+    - name: Install Velero
+      shell: |
+        velero install \
+        --provider azure \
+        --plugins velero/velero-plugin-for-microsoft-azure:{{ azure_plugin_version }} \
+        --bucket {{ blob_container }} \
+        --secret-file ./credentials-velero.txt \
+        --backup-location-config resourceGroup={{ azure_backup_resource_group }},storageAccount={{ azure_storage_account_id }},subscriptionId={{ azure_backup_subscription_id }} \
+        --features=EnableCSI \
+        --use-node-agent
+
+    - name: Create StorageClass
+      copy:
+        dest: /tmp/storageclass.yaml
+        content: |
+          apiVersion: storage.k8s.io/v1
+          kind: StorageClass
+          metadata:
+            name: azure-csi
+          provisioner: disk.csi.azure.com
+          parameters:
+            skuName: StandardSSD_LRS
+            kind: Managed
+            cachingMode: None
+          reclaimPolicy: Delete
+          volumeBindingMode: WaitForFirstConsumer
+          allowVolumeExpansion: true
+
+    - name: Apply StorageClass
+      command: kubectl apply -f /tmp/storageclass.yaml
+
+    - name: Create ConfigMap for storage class change
+      copy:
+        dest: /tmp/change-storage-class-config.yaml
+        content: |
+          apiVersion: v1
+          kind: ConfigMap
+          metadata:
+            name: change-storage-class-config
+            namespace: velero
+          data:
+            config: |
+              version: v1
+              resourceModifierRules:
+              - conditions:
+                  groupResource: persistentvolumeclaims
+                  matches:
+                    - path: "/spec/storageClassName"
+                      value: "managed-csi"
+                patches:
+                  - operation: replace
+                    path: "/spec/storageClassName"
+                    value: "azure-csi"
+
+    - name: Apply ConfigMap
+      command: kubectl apply -f /tmp/change-storage-class-config.yaml
+
+    - name: Run Velero restore
+      shell: |
+        velero restore create {{ restore_name }} \
+        --include-namespaces ns1,ns2,velero-test,mysql-operator,mysql-dbs \
+        --from-backup {{ backup_name }} \
+        --resource-modifier-configmap change-storage-class-config \
+        --wait
