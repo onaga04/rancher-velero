@@ -1,0 +1,13 @@
+velero_version: v1.15.2
+azure_plugin_version: v1.12.2
+
+blob_container: my-velero-container
+azure_backup_subscription_id: "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+azure_backup_resource_group: "my-rg"
+azure_storage_account_id: "mystorageacct"
+azure_subscription_id: "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+azure_tenant_id: "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+azure_client_id: "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+azure_client_secret: "my-secret"
+backup_name: ${cluster_name}-backup
+restore_name: ${cluster_name}-restore
