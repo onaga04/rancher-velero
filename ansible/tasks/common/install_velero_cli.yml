@@ -4,9 +4,6 @@
   become: yes
   gather_facts: no
 
-  vars:
-    velero_version: "1.14.0"
-
   tasks:
     - name: Check if Velero is already installed
       ansible.builtin.command: which velero
