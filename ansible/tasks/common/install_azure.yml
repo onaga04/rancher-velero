@@ -1,0 +1,26 @@
+---
+# tasks/common/install_azure.yml
+# Purpose: Ensure Azure CLI is installed (optimized for Azure VMs / Ubuntu)
+
+- name: Check if Azure CLI is already installed
+  command: az version
+  register: azure_cli_check
+  ignore_errors: yes
+  changed_when: false
+
+- name: Install Azure CLI if missing
+  apt:
+    name: azure-cli
+    state: present
+    update_cache: yes
+  when: azure_cli_check.rc != 0
+
+- name: Verify Azure CLI installation
+  command: az version
+  register: azure_cli_verify
+  changed_when: false
+
+- name: Display installed Azure CLI version
+  debug:
+    msg: "Azure CLI version info: {{ azure_cli_verify.stdout }}"
+

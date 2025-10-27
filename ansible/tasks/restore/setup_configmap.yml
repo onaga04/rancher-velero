@@ -1,0 +1,54 @@
+---
+- name: Create ConfigMap for Velero resource modifier
+  hosts: localhost
+  gather_facts: no
+  vars:
+    configmap_name: "change-storage-class-config"
+    namespace: "velero"
+    target_storage_class: "azure-csi"
+    original_storage_class: "managed-csi"
+
+  tasks:
+    - name: Check if ConfigMap already exists
+      ansible.builtin.command: kubectl get configmap {{ configmap_name }} -n {{ namespace }} -o name
+      register: cm_check
+      failed_when: false
+      changed_when: false
+
+    - name: Create ConfigMap YAML if not exists
+      ansible.builtin.copy:
+        dest: /tmp/{{ configmap_name }}.yaml
+        content: |
+          apiVersion: v1
+          kind: ConfigMap
+          metadata:
+            name: {{ configmap_name }}
+            namespace: {{ namespace }}
+          data:
+            config: |
+              version: v1
+              resourceModifierRules:
+              - conditions:
+                  groupResource: persistentvolumeclaims
+                  matches:
+                    - path: "/spec/storageClassName"
+                      value: "{{ original_storage_class }}"
+                patches:
+                  - operation: replace
+                    path: "/spec/storageClassName"
+                    value: "{{ target_storage_class }}"
+      when: cm_check.rc != 0
+
+    - name: Apply ConfigMap
+      ansible.builtin.command: kubectl apply -f /tmp/{{ configmap_name }}.yaml
+      when: cm_check.rc != 0
+
+    - name: Verify ConfigMap creation
+      ansible.builtin.command: kubectl get configmap {{ configmap_name }} -n {{ namespace }} -o yaml
+      register: cm_info
+      changed_when: false
+
+    - name: Display ConfigMap info
+      ansible.builtin.debug:
+        msg: "{{ cm_info.stdout }}"
+

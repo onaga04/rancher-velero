@@ -1,0 +1,20 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: change-storage-class-config
+  namespace: velero
+data:
+  config: |
+    version: v1
+    resourceModifierRules:
+      - conditions:
+          groupResource: persistentvolumeclaims
+          matches:
+            - path: "/spec/storageClassName"
+              value: "managed-csi"  # original storage class on source cluster
+        patches:
+          - operation: replace
+            path: "/spec/storageClassName"
+            value: "azure-csi"     # storage class on target cluster
+
+

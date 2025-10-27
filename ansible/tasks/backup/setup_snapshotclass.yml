@@ -1,0 +1,53 @@
+---
+- name: Set up VolumeSnapshotClass for Velero on Azure
+  hosts: localhost
+  gather_facts: no
+  vars:
+    snapshot_class_name: "velero-azure-snapshot-class"
+    snapshot_driver: "disk.csi.azure.com"
+    deletion_policy: "Delete"
+
+  tasks:
+    - name: Check if VolumeSnapshotClass already exists
+      ansible.builtin.command: kubectl get volumesnapshotclass {{ snapshot_class_name }} -o name
+      register: snapshotclass_check
+      failed_when: false
+      changed_when: false
+
+    - name: Create VolumeSnapshotClass if not exists
+      ansible.builtin.copy:
+        dest: /tmp/{{ snapshot_class_name }}.yaml
+        content: |
+          apiVersion: snapshot.storage.k8s.io/v1
+          kind: VolumeSnapshotClass
+          metadata:
+            name: {{ snapshot_class_name }}
+            labels:
+              velero.io/csi-volumesnapshot-class: "true"
+          driver: {{ snapshot_driver }}
+          deletionPolicy: {{ deletion_policy }}
+          parameters:
+            incremental: "true"
+      when: snapshotclass_check.rc != 0
+
+    - name: Apply VolumeSnapshotClass YAML
+      ansible.builtin.command: kubectl apply -f /tmp/{{ snapshot_class_name }}.yaml
+      when: snapshotclass_check.rc != 0
+
+    - name: Annotate VolumeSnapshotClass for Velero
+      ansible.builtin.command: >
+        kubectl annotate volumesnapshotclass {{ snapshot_class_name }}
+        velero.io/csi-volumesnapshot-class="true"
+        --overwrite
+      register: annotate_result
+      changed_when: "'annotated' in annotate_result.stdout or 'configured' in annotate_result.stdout"
+
+    - name: Verify VolumeSnapshotClass setup
+      ansible.builtin.command: kubectl get volumesnapshotclass {{ snapshot_class_name }} -o yaml
+      register: snapshotclass_info
+      changed_when: false
+
+    - name: Display VolumeSnapshotClass info
+      ansible.builtin.debug:
+        msg: "{{ snapshotclass_info.stdout }}"
+i

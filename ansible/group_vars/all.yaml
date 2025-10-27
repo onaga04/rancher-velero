@@ -1,13 +1,36 @@
-velero_version: v1.15.2
-azure_plugin_version: v1.12.2
-
-blob_container: my-velero-container
-azure_backup_subscription_id: "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
-azure_backup_resource_group: "my-rg"
-azure_storage_account_id: "mystorageacct"
+# Azure credentials and backup configuration
 azure_subscription_id: "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
 azure_tenant_id: "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
 azure_client_id: "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
-azure_client_secret: "my-secret"
-backup_name: ${cluster_name}-backup
-restore_name: ${cluster_name}-restore
+azure_client_secret: "YOUR_SECRET"
+azure_backup_resource_group: "velero-backup-rg"
+azure_storage_account: "veleroblobstorage"
+azure_blob_container: "velero-backups"
+
+# Velero versions
+velero_cli_version: "v1.15.2"
+velero_plugin_version: "v1.12.2"
+
+# Cluster kubeconfig paths
+src_kubeconfig_path: "./kubeconfigs/kubeconfig-src"
+dest_kubeconfig_path: "./kubeconfigs/kubeconfig-dest"
+
+# StorageClass names
+source_storage_class: "managed-csi"
+target_storage_class: "azure-csi"
+
+# SnapshotClass names
+snapshot_class_name: "velero-azure-snapshot-class"
+snapshot_driver: "disk.csi.azure.com"
+
+# Velero namespaces
+velero_namespace: "velero"
+
+# Backup/Restore names
+backup_name: "beta-v2-az-use2-rke2-backup-sql"
+restore_name: "beta-v2-az-use2-rke2-poc2-restore-sql"
+
+# Namespaces to include/exclude in backup/restore
+excluded_namespaces: "kube-system,kube-public,kube-node-lease,default,velero,cattle-system,cattle-fleet-system,fleet-default"
+included_namespaces: "ns1,ns2,velero-test,mysql-operator,mysql-dbs"
+
