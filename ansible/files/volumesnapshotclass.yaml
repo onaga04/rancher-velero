@@ -8,4 +8,3 @@ driver: disk.csi.azure.com
 deletionPolicy: Delete
 parameters:
   incremental: "true"
-i
