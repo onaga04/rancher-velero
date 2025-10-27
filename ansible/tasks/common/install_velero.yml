@@ -3,13 +3,13 @@
   hosts: localhost
   gather_facts: no
   vars:
-    velero_bucket: "myvelerobackup"
-    velero_resource_group: "velero-rg"
-    velero_storage_account: "velerostorageacct"
-    velero_subscription_id: "{{ lookup('env', 'AZURE_SUBSCRIPTION_ID') }}"
-    velero_tenant_id: "{{ lookup('env', 'AZURE_TENANT_ID') }}"
-    velero_client_id: "{{ lookup('env', 'AZURE_CLIENT_ID') }}"
-    velero_client_secret: "{{ lookup('env', 'AZURE_CLIENT_SECRET') }}"
+    velero_bucket: "{{ lookup('env', 'azure_blob_container') }}"
+    velero_resource_group: "{{ lookup('env', 'azure_backup_resource_group') }}"
+    velero_storage_account: "{{ lookup('env', 'azure_storage_account') }}"
+    velero_subscription_id: "{{ lookup('env', 'azure_subscription_id') }}"
+    velero_tenant_id: "{{ lookup('env', 'azure_tenant_id') }}"
+    velero_client_id: "{{ lookup('env', 'azure_client_id') }}"
+    velero_client_secret: "{{ lookup('env', 'azure_client_secret') }}"
     velero_backup_location: "azure"
 
   tasks:
@@ -22,13 +22,13 @@
     - name: Install Velero with Azure plugin
       ansible.builtin.command: >
         velero install
-        --provider azure
-        --plugins velero/velero-plugin-for-microsoft-azure:v1.9.0
-        --bucket {{ velero_bucket }}
-        --secret-file ./credentials-velero
-        --backup-location-config resourceGroup={{ velero_resource_group }},storageAccount={{ velero_storage_account }}
-        --use-volume-snapshots=false
-        --default-volumes-to-restic
+        --provider azure 
+        --plugins velero/velero-plugin-for-microsoft-azure:v1.12.2 
+        --bucket {{ velero_bucket }} 
+        --secret-file ./credentials-velero.txt \
+        --backup-location-config resourceGroup={{ velero_resource_group }},storageAccount={{ velero_storage_account }},subscriptionId={{ velero_subscription_id }}
+        --features=EnableCSI \
+        --use-node-agent
       register: velero_install_output
       changed_when: "'Velero is already installed' not in velero_install_output.stdout"
 
