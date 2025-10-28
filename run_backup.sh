@@ -1,0 +1,55 @@
+#!/bin/bash
+
+# Define available tasks
+declare -a tasks=(
+  "Install Azure CLI on Azure hosts"
+  "Install full Azure CLI setup on non-Azure hosts"
+  "Install Velero CLI"
+  "Log in to Azure"
+  "Setup snapshot class for Velero"
+  "Create Velero backup"
+)
+
+# Function to display tasks
+show_tasks() {
+  echo "Available tasks:"
+  for i in "${!tasks[@]}"; do
+    printf "%2d) %s\n" "$((i+1))" "${tasks[$i]}"
+  done
+  echo
+  echo "Enter the number of the task to run."
+  echo "[s] Skip | [b] Back | [c] Cancel"
+}
+
+# Loop to select tasks
+while true; do
+  show_tasks
+  read -rp "Choice: " choice
+
+  case "$choice" in
+    [0-9]*)
+      if (( choice >= 1 && choice <= ${#tasks[@]} )); then
+        task_name="${tasks[$((choice-1))]}"
+        echo "Running: $task_name"
+        ansible-playbook ansible/velero-backup.yaml --tags "$(echo "$task_name" | tr ' ' '_')" || {
+          echo "Error running $task_name"
+        }
+      else
+        echo "Invalid task number."
+      fi
+      ;;
+    s|S)
+      echo "Skipping current selection..."
+      ;;
+    b|B)
+      echo "Going back one step (not implemented yet)..."
+      ;;
+    c|C)
+      echo "Cancelled."
+      exit 0
+      ;;
+    *)
+      echo "Invalid choice."
+      ;;
+  esac
+done
