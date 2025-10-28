@@ -6,10 +6,11 @@ azure_client_secret: "YOUR_SECRET"
 azure_backup_resource_group: "velero-backup-rg"
 azure_storage_account: "veleroblobstorage"
 azure_blob_container: "velero-backups"
+cloud_provider: 'azure'
 
 # Velero versions
 velero_cli_version: "v1.15.2"
-velero_plugin_version: "v1.12.2"
+azure_plugin_version: "v1.12.2"
 
 # Cluster kubeconfig paths
 src_kubeconfig_path: "./kubeconfigs/kubeconfig-src"
@@ -34,7 +35,14 @@ restore_name: "beta-v2-az-use2-rke2-poc2-restore-sql"
 excluded_namespaces: "kube-system,kube-public,kube-node-lease,default,velero,cattle-system,cattle-fleet-system,fleet-default"
 included_namespaces: "ns1,ns2,velero-test,mysql-operator,mysql-dbs"
 
+resource_modifier_configmap: "change-storage-class-config"
+storage_class_name: "storageclass"
+
 snapshot_volumes: true
 snapshot_move_data: true
 wait_for_backup: true
+wait_for_restore: true
+
+namespace: "velero"
+
 
