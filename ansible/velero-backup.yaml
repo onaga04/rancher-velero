@@ -7,24 +7,28 @@
   tasks:
     - name: Install Azure CLI on Azure hosts
       include_tasks: tasks/common/install_azure.yml
-      when: ansible_facts['cloud_provider'] == 'azure'
+      when: cloud_provider == 'azure'
+      tags: install_azure_cli
 
     - name: Install full Azure CLI setup on non-Azure hosts
       include_tasks: tasks/common/install_azure_full.yml
       when: ansible_facts['cloud_provider'] != 'azure'
+      tags: install_full_azure_cli
 
     - name: Install Velero CLI
       include_tasks: tasks/common/install_velero.yml
-
-    - name: Set kubeconfig for source cluster
-      include_tasks: tasks/common/set_kubeconfig.yml
+      tags: install_velero_cli
 
     - name: Log in to Azure
       include_tasks: tasks/common/azure_login.yml
+      tags: azure_login
 
     - name: Setup snapshot class for Velero
       include_tasks: tasks/backup/setup_snapshotclass.yml
+      tags: setup_snapshotclass
 
     - name: Create Velero backup
       include_tasks: tasks/backup/create_backup.yml
+      tags: create_backup
+
 
