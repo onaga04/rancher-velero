@@ -2,12 +2,6 @@
 - name: Create Velero Backup on Source Cluster
   hosts: localhost
   gather_facts: no
-  vars:
-    backup_name: "beta-v2-az-use2-rke2-backup-sql"
-    excluded_namespaces: "kube-system,kube-public,kube-node-lease,default,velero,cattle-system,cattle-fleet-system,fleet-default"
-    snapshot_volumes: true
-    snapshot_move_data: true
-    wait_for_backup: true
 
   tasks:
     - name: Start Velero backup
