@@ -34,3 +34,7 @@ restore_name: "beta-v2-az-use2-rke2-poc2-restore-sql"
 excluded_namespaces: "kube-system,kube-public,kube-node-lease,default,velero,cattle-system,cattle-fleet-system,fleet-default"
 included_namespaces: "ns1,ns2,velero-test,mysql-operator,mysql-dbs"
 
+snapshot_volumes: true
+snapshot_move_data: true
+wait_for_backup: true
+
