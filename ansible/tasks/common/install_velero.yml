@@ -15,7 +15,7 @@
       ansible.builtin.command: >
         velero install
         --provider azure 
-        --plugins velero/velero-plugin-for-microsoft-azure:v1.12.2 
+        --plugins velero/velero-plugin-for-microsoft-azure:v{{ azure_plugin_version }}
         --bucket {{ velero_bucket }} 
         --secret-file ../../files/credentials-velero.txt 
         --backup-location-config resourceGroup={{ velero_resource_group }},storageAccount={{ velero_storage_account }},subscriptionId={{ velero_subscription_id }}
