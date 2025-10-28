@@ -2,12 +2,6 @@
 - name: Create Velero Restore on Target Cluster
   hosts: localhost
   gather_facts: no
-  vars:
-    restore_name: "beta-v2-az-use2-rke2-poc2-restore-sql"
-    backup_name: "beta-v2-az-use2-rke2-backup-sql"
-    include_namespaces: "ns1,ns2,velero-test,mysql-operator,mysql-dbs"
-    resource_modifier_configmap: "change-storage-class-config"
-    wait_for_restore: true
 
   tasks:
     - name: Start Velero restore
