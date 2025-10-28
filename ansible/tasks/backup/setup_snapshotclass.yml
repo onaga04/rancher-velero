@@ -2,10 +2,6 @@
 - name: Set up VolumeSnapshotClass for Velero on Azure
   hosts: localhost
   gather_facts: no
-  vars:
-    snapshot_class_name: "velero-azure-snapshot-class"
-    snapshot_driver: "disk.csi.azure.com"
-    deletion_policy: "Delete"
 
   tasks:
     - name: Check if VolumeSnapshotClass already exists
@@ -16,18 +12,8 @@
 
     - name: Create VolumeSnapshotClass if not exists
       ansible.builtin.copy:
+        src: ../../files/volumesnapshotclass.yaml
         dest: /tmp/{{ snapshot_class_name }}.yaml
-        content: |
-          apiVersion: snapshot.storage.k8s.io/v1
-          kind: VolumeSnapshotClass
-          metadata:
-            name: {{ snapshot_class_name }}
-            labels:
-              velero.io/csi-volumesnapshot-class: "true"
-          driver: {{ snapshot_driver }}
-          deletionPolicy: {{ deletion_policy }}
-          parameters:
-            incremental: "true"
       when: snapshotclass_check.rc != 0
 
     - name: Apply VolumeSnapshotClass YAML
