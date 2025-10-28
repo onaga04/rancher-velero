@@ -13,8 +13,8 @@ velero_cli_version: "v1.15.2"
 azure_plugin_version: "v1.12.2"
 
 # Cluster kubeconfig paths
-src_kubeconfig_path: "./kubeconfigs/kubeconfig-src"
-dest_kubeconfig_path: "./kubeconfigs/kubeconfig-dest"
+src_kubeconfig_path: "/var/lib/rancher/rke2/bin/"
+dest_kubeconfig_path: "/var/lib/rancher/rke2/bin/"
 
 # StorageClass names
 source_storage_class: "managed-csi"
