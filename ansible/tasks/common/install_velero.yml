@@ -2,15 +2,7 @@
 - name: Install Velero in Kubernetes cluster (Azure)
   hosts: localhost
   gather_facts: no
-  vars:
-    velero_bucket: "{{ lookup('env', 'azure_blob_container') }}"
-    velero_resource_group: "{{ lookup('env', 'azure_backup_resource_group') }}"
-    velero_storage_account: "{{ lookup('env', 'azure_storage_account') }}"
-    velero_subscription_id: "{{ lookup('env', 'azure_subscription_id') }}"
-    velero_tenant_id: "{{ lookup('env', 'azure_tenant_id') }}"
-    velero_client_id: "{{ lookup('env', 'azure_client_id') }}"
-    velero_client_secret: "{{ lookup('env', 'azure_client_secret') }}"
-    velero_backup_location: "azure"
+
 
   tasks:
     - name: Install Velero CLI (if missing)
@@ -25,7 +17,7 @@
         --provider azure 
         --plugins velero/velero-plugin-for-microsoft-azure:v1.12.2 
         --bucket {{ velero_bucket }} 
-        --secret-file ./credentials-velero.txt \
+        --secret-file ../../files/credentials-velero.txt 
         --backup-location-config resourceGroup={{ velero_resource_group }},storageAccount={{ velero_storage_account }},subscriptionId={{ velero_subscription_id }}
         --features=EnableCSI \
         --use-node-agent
