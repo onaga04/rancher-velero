@@ -2,7 +2,7 @@
   hosts: source_cluster
   become: yes
   vars_files:
-    - group_vars/all.yml
+    - group_vars/all.yaml
 
   tasks:
     - name: Install Azure CLI on Azure hosts
