@@ -2,11 +2,6 @@
 - name: Azure Login Playbook
   hosts: localhost
   gather_facts: no
-  vars:
-    azure_client_id: "{{ lookup('env', 'AZURE_CLIENT_ID') }}"
-    azure_client_secret: "{{ lookup('env', 'AZURE_CLIENT_SECRET') }}"
-    azure_tenant_id: "{{ lookup('env', 'AZURE_TENANT_ID') }}"
-    azure_subscription_id: "{{ lookup('env', 'AZURE_SUBSCRIPTION_ID') }}"
 
   tasks:
     - name: Ensure Azure CLI is installed
