@@ -12,6 +12,7 @@
     - include_tasks: tasks/common/azure_login.yml
 
     - include_tasks: tasks/restore/setup_storageclass.yml
+      when: ansible_facts['cloud_provider'] == 'azure'
     - include_tasks: tasks/restore/setup_configmap.yml
     - include_tasks: tasks/restore/create_restore.yml
 
