@@ -20,13 +20,3 @@
 - name: Display backup description
   ansible.builtin.debug:
     msg: "{{ velero_backup_description.stdout }}"
-
-- name: List datauploads related to this backup
-  ansible.builtin.command: kubectl -n velero get datauploads -l velero.io/backup-name={{ backup_name }}
-  register: datauploads_list
-  changed_when: false
-
-- name: Display Velero data uploads
-  ansible.builtin.debug:
-    msg: "{{ datauploads_list.stdout }}"
-
