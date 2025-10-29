@@ -1,31 +1,25 @@
----
-- name: Set up StorageClass for Velero restore on Azure
-  hosts: localhost
-  gather_facts: no
+- name: Check if StorageClass already exists
+  ansible.builtin.command: kubectl get storageclass {{ storage_class_name }} -o name
+  register: sc_check
+  failed_when: false
+  changed_when: false
 
-  tasks:
-    - name: Check if StorageClass already exists
-      ansible.builtin.command: kubectl get storageclass {{ storage_class_name }} -o name
-      register: sc_check
-      failed_when: false
-      changed_when: false
+- name: Create StorageClass manifest file
+  ansible.builtin.copy:
+    src: ../../files/storageclass.yaml
+    dest: /tmp/{{ storage_class_name }}.yaml
+  when: sc_check.rc != 0
 
-    - name: Create StorageClass manifest file
-      ansible.builtin.copy:
-        src: ../../files/storageclass.yaml
-        dest: /tmp/{{ storage_class_name }}.yaml
-      when: sc_check.rc != 0
+- name: Apply StorageClass manifest
+  ansible.builtin.command: kubectl apply -f /tmp/{{ storage_class_name }}.yaml
+  when: sc_check.rc != 0
 
-    - name: Apply StorageClass manifest
-      ansible.builtin.command: kubectl apply -f /tmp/{{ storage_class_name }}.yaml
-      when: sc_check.rc != 0
+- name: Verify StorageClass creation
+  ansible.builtin.command: kubectl get storageclass {{ storage_class_name }} -o yaml
+  register: sc_info
+  changed_when: false
 
-    - name: Verify StorageClass creation
-      ansible.builtin.command: kubectl get storageclass {{ storage_class_name }} -o yaml
-      register: sc_info
-      changed_when: false
-
-    - name: Display StorageClass details
-      ansible.builtin.debug:
-        msg: "{{ sc_info.stdout }}"
+- name: Display StorageClass details
+  ansible.builtin.debug:
+    msg: "{{ sc_info.stdout }}"
 
