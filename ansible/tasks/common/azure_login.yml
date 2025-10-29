@@ -1,39 +1,33 @@
----
-- name: Azure Login Playbook
-  hosts: localhost
-  gather_facts: no
+- name: Ensure Azure CLI is installed
+  ansible.builtin.command: which az
+  register: az_check
+  ignore_errors: yes
 
-  tasks:
-    - name: Ensure Azure CLI is installed
-      ansible.builtin.command: which az
-      register: az_check
-      ignore_errors: yes
+- name: Install Azure CLI if not found
+  ansible.builtin.shell: |
+    curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
+  when: az_check.rc != 0
 
-    - name: Install Azure CLI if not found
-      ansible.builtin.shell: |
-        curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
-      when: az_check.rc != 0
+- name: Log in to Azure using service principal
+  ansible.builtin.shell: >
+    az login --service-principal
+    -u "{{ azure_client_id }}"
+    -p "{{ azure_client_secret }}"
+    --tenant "{{ azure_tenant_id }}"
+  register: login_output
+  changed_when: false
 
-    - name: Log in to Azure using service principal
-      ansible.builtin.shell: >
-        az login --service-principal
-        -u "{{ azure_client_id }}"
-        -p "{{ azure_client_secret }}"
-        --tenant "{{ azure_tenant_id }}"
-      register: login_output
-      changed_when: false
+- name: Set Azure subscription
+  ansible.builtin.shell: >
+    az account set --subscription "{{ azure_subscription_id }}"
+  when: azure_subscription_id is defined
 
-    - name: Set Azure subscription
-      ansible.builtin.shell: >
-        az account set --subscription "{{ azure_subscription_id }}"
-      when: azure_subscription_id is defined
+- name: Verify Azure login
+  ansible.builtin.shell: az account show
+  register: account_info
+  changed_when: false
 
-    - name: Verify Azure login
-      ansible.builtin.shell: az account show
-      register: account_info
-      changed_when: false
-
-    - name: Display current Azure subscription
-      ansible.builtin.debug:
-        msg: "Logged in to Azure subscription: {{ account_info.stdout }}"
+- name: Display current Azure subscription
+  ansible.builtin.debug:
+    msg: "Logged in to Azure subscription: {{ account_info.stdout }}"
 
