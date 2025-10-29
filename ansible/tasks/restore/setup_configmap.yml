@@ -1,31 +1,25 @@
----
-- name: Create ConfigMap for Velero resource modifier
-  hosts: localhost
-  gather_facts: no
+- name: Check if ConfigMap already exists
+  ansible.builtin.command: kubectl get configmap {{ resource_modifier_configmap }} -n {{ namespace }} -o name
+  register: cm_check
+  failed_when: false
+  changed_when: false
 
-  tasks:
-    - name: Check if ConfigMap already exists
-      ansible.builtin.command: kubectl get configmap {{ resource_modifier_configmap }} -n {{ namespace }} -o name
-      register: cm_check
-      failed_when: false
-      changed_when: false
+- name: Create ConfigMap YAML if not exists
+  ansible.builtin.copy:
+    src: ../../files/change-storage-class-config.yaml
+    dest: /tmp/{{ configmap_name }}.yaml
+  when: cm_check.rc != 0
 
-    - name: Create ConfigMap YAML if not exists
-      ansible.builtin.copy:
-        src: ../../files/change-storage-class-config.yaml
-        dest: /tmp/{{ configmap_name }}.yaml
-      when: cm_check.rc != 0
+- name: Apply ConfigMap
+  ansible.builtin.command: kubectl apply -f /tmp/{{ resource_modifier_configmap }}.yaml
+  when: cm_check.rc != 0
 
-    - name: Apply ConfigMap
-      ansible.builtin.command: kubectl apply -f /tmp/{{ resource_modifier_configmap }}.yaml
-      when: cm_check.rc != 0
+- name: Verify ConfigMap creation
+  ansible.builtin.command: kubectl get configmap {{ resource_modifier_configmap }} -n {{ namespace }} -o yaml
+  register: cm_info
+  changed_when: false
 
-    - name: Verify ConfigMap creation
-      ansible.builtin.command: kubectl get configmap {{ resource_modifier_configmap }} -n {{ namespace }} -o yaml
-      register: cm_info
-      changed_when: false
-
-    - name: Display ConfigMap info
-      ansible.builtin.debug:
-        msg: "{{ cm_info.stdout }}"
+- name: Display ConfigMap info
+  ansible.builtin.debug:
+    msg: "{{ cm_info.stdout }}"
 
