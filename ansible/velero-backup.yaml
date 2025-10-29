@@ -1,6 +1,7 @@
 - name: Velero Backup Playbook
   hosts: source_cluster
   become: yes
+  gather_facts: no
   vars_files:
     - group_vars/all.yaml
   environment:
@@ -21,21 +22,29 @@
     - name: Log in to Azure
       include_tasks: tasks/common/azure_login.yml
       tags: Log_in_to_Azure
-      
+
     - name: Install Velero CLI
       include_tasks: tasks/common/install_velero.yml
       tags: Install_Velero_CLI
 
     - name: Install Velero
-      include_tasks: tasks/common/install_velero.yml
+      include_tasks:
+        file: tasks/common/install_velero.yml
+        apply:
+          tags: Install_Velero
       tags: Install_Velero
 
     - name: Setup snapshot class for Velero
-      include_tasks: tasks/backup/setup_snapshotclass.yml
+      include_tasks:
+        file: tasks/backup/setup_snapshotclass.yml
+        apply:
+          tags: Setup_snapshot_class_for_Velero
       tags: Setup_snapshot_class_for_Velero
 
     - name: Create Velero backup
-      include_tasks: tasks/backup/create_backup.yml
+      include_tasks:
+        file: tasks/backup/create_backup.yml
+        apply:
+          tags: Create_Velero_backup
       tags: Create_Velero_backup
-
 
