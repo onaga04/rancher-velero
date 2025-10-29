@@ -12,7 +12,7 @@
 
     - name: Install full Azure CLI setup on non-Azure hosts
       include_tasks: tasks/common/install_azure_full.yml
-      when: ansible_facts['cloud_provider'] != 'azure'
+      when: cloud_provider != 'azure'
       tags: install_full_azure_cli
       
     - name: Set KUBECONFIG
