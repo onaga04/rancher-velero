@@ -1,38 +1,32 @@
----
-- name: Create Velero Backup on Source Cluster
-  hosts: localhost
-  gather_facts: no
+- name: Start Velero backup
+  ansible.builtin.command: >
+    velero backup create {{ backup_name }}
+    --exclude-namespaces {{ excluded_namespaces }}
+    {% if snapshot_volumes %} --snapshot-volumes {% endif %}
+    {% if snapshot_move_data %} --snapshot-move-data {% endif %}
+    {% if wait_for_backup %} --wait {% endif %}
+  register: velero_backup_result
+  changed_when: "'Backup completed' in velero_backup_result.stdout or 'created' in velero_backup_result.stdout"
 
-  tasks:
-    - name: Start Velero backup
-      ansible.builtin.command: >
-        velero backup create {{ backup_name }}
-        --exclude-namespaces {{ excluded_namespaces }}
-        {% if snapshot_volumes %} --snapshot-volumes {% endif %}
-        {% if snapshot_move_data %} --snapshot-move-data {% endif %}
-        {% if wait_for_backup %} --wait {% endif %}
-      register: velero_backup_result
-      changed_when: "'Backup completed' in velero_backup_result.stdout or 'created' in velero_backup_result.stdout"
+- name: Show Velero backup result
+  ansible.builtin.debug:
+    msg: "{{ velero_backup_result.stdout }}"
 
-    - name: Show Velero backup result
-      ansible.builtin.debug:
-        msg: "{{ velero_backup_result.stdout }}"
+- name: Verify Velero backup status
+  ansible.builtin.command: velero backup describe {{ backup_name }}
+  register: velero_backup_description
+  changed_when: false
 
-    - name: Verify Velero backup status
-      ansible.builtin.command: velero backup describe {{ backup_name }}
-      register: velero_backup_description
-      changed_when: false
+- name: Display backup description
+  ansible.builtin.debug:
+    msg: "{{ velero_backup_description.stdout }}"
 
-    - name: Display backup description
-      ansible.builtin.debug:
-        msg: "{{ velero_backup_description.stdout }}"
+- name: List datauploads related to this backup
+  ansible.builtin.command: kubectl -n velero get datauploads -l velero.io/backup-name={{ backup_name }}
+  register: datauploads_list
+  changed_when: false
 
-    - name: List datauploads related to this backup
-      ansible.builtin.command: kubectl -n velero get datauploads -l velero.io/backup-name={{ backup_name }}
-      register: datauploads_list
-      changed_when: false
-
-    - name: Display Velero data uploads
-      ansible.builtin.debug:
-        msg: "{{ datauploads_list.stdout }}"
+- name: Display Velero data uploads
+  ansible.builtin.debug:
+    msg: "{{ datauploads_list.stdout }}"
 
