@@ -4,10 +4,10 @@
 declare -a tasks=(
   "Install Azure CLI on Azure hosts"
   "Install full Azure CLI setup on non-Azure hosts"
+  "Log in to Azure"
   "Set KUBECONFIG"
   "Install Velero CLI"
   "Install Velero"
-  "Log in to Azure"
   "Setup snapshot class for Velero"
   "Create Velero backup"
 )
@@ -20,7 +20,7 @@ show_tasks() {
   done
   echo
   echo "Enter the number of the task to run."
-  echo "[s] Skip | [b] Back | [c] Cancel"
+  echo "[c] Cancel"
 }
 
 # Loop to select tasks
@@ -39,12 +39,6 @@ while true; do
       else
         echo "Invalid task number."
       fi
-      ;;
-    s|S)
-      echo "Skipping current selection..."
-      ;;
-    b|B)
-      echo "Going back one step (not implemented yet)..."
       ;;
     c|C)
       echo "Cancelled."
