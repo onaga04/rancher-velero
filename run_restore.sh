@@ -5,7 +5,6 @@ declare -a tasks=(
   "Install Azure CLI on Azure hosts"
   "Install full Azure CLI setup on non-Azure hosts"
   "Log in to Azure"
-  "Set KUBECONFIG"
   "Install Velero CLI"
   "Install Velero"
   "Setup storage class"
