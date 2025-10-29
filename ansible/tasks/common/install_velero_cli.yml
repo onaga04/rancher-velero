@@ -1,38 +1,31 @@
----
-- name: Install Velero CLI on Azure VM
-  hosts: localhost
-  become: yes
-  gather_facts: no
+- name: Check if Velero is already installed
+  ansible.builtin.command: which velero
+  register: velero_check
+  ignore_errors: yes
 
-  tasks:
-    - name: Check if Velero is already installed
-      ansible.builtin.command: which velero
-      register: velero_check
-      ignore_errors: yes
+- name: Download Velero CLI tarball
+  ansible.builtin.get_url:
+    url: "https://github.com/vmware-tanzu/velero/releases/download/v{{ velero_cli_version }}/velero-v{{ velero_cli_version }}-linux-amd64.tar.gz"
+    dest: "/tmp/velero-v{{ velero_cli_version }}-linux-amd64.tar.gz"
+  when: velero_check.rc != 0
 
-    - name: Download Velero CLI tarball
-      ansible.builtin.get_url:
-        url: "https://github.com/vmware-tanzu/velero/releases/download/v{{ velero_cli_version }}/velero-v{{ velero_cli_version }}-linux-amd64.tar.gz"
-        dest: "/tmp/velero-v{{ velero_cli_version }}-linux-amd64.tar.gz"
-      when: velero_check.rc != 0
+- name: Extract Velero CLI
+  ansible.builtin.unarchive:
+    src: "/tmp/velero-v{{ velero_cli_version }}-linux-amd64.tar.gz"
+    dest: "/tmp"
+    remote_src: yes
+  when: velero_check.rc != 0
 
-    - name: Extract Velero CLI
-      ansible.builtin.unarchive:
-        src: "/tmp/velero-v{{ velero_cli_version }}-linux-amd64.tar.gz"
-        dest: "/tmp"
-        remote_src: yes
-      when: velero_check.rc != 0
+- name: Move Velero binary to /usr/local/bin
+  ansible.builtin.command: mv /tmp/velero-v{{ velero_cli_version }}-linux-amd64/velero /usr/local/bin/velero
+  when: velero_check.rc != 0
 
-    - name: Move Velero binary to /usr/local/bin
-      ansible.builtin.command: mv /tmp/velero-v{{ velero_cli_version }}-linux-amd64/velero /usr/local/bin/velero
-      when: velero_check.rc != 0
+- name: Verify Velero installation
+  ansible.builtin.command: velero version
+  register: velero_version_check
+  changed_when: false
 
-    - name: Verify Velero installation
-      ansible.builtin.command: velero version
-      register: velero_version_check
-      changed_when: false
-
-    - name: Show Velero version
-      ansible.builtin.debug:
-        msg: "Velero installed: {{ velero_version_check.stdout }}"
+- name: Show Velero version
+  ansible.builtin.debug:
+    msg: "Velero installed: {{ velero_version_check.stdout }}"
 
