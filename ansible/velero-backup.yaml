@@ -3,6 +3,9 @@
   become: yes
   vars_files:
     - group_vars/all.yaml
+  environment:
+    KUBECONFIG: "{{ kubeconfig_path }}"
+    PATH: "{{ ansible_env.PATH }}:/var/lib/rancher/rke2/bin"
 
   tasks:
     - name: Install Azure CLI on Azure hosts
@@ -18,10 +21,6 @@
     - name: Log in to Azure
       include_tasks: tasks/common/azure_login.yml
       tags: Log_in_to_Azure
-      
-    - name: Set KUBECONFIG
-      include_tasks: tasks/common/set_kubeconfig_src.yml
-      tags: Set_KUBECONFIG
       
     - name: Install Velero CLI
       include_tasks: tasks/common/install_velero.yml
