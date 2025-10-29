@@ -1,38 +1,32 @@
----
-- name: Create Velero Restore on Target Cluster
-  hosts: localhost
-  gather_facts: no
+- name: Start Velero restore
+  ansible.builtin.command: >
+    velero restore create {{ restore_name }}
+    --from-backup {{ backup_name }}
+    --include-namespaces {{ include_namespaces }}
+    --resource-modifier-configmap {{ resource_modifier_configmap }}
+    {% if wait_for_restore %} --wait {% endif %}
+  register: velero_restore_result
+  changed_when: "'Restore completed' in velero_restore_result.stdout or 'created' in velero_restore_result.stdout"
 
-  tasks:
-    - name: Start Velero restore
-      ansible.builtin.command: >
-        velero restore create {{ restore_name }}
-        --from-backup {{ backup_name }}
-        --include-namespaces {{ include_namespaces }}
-        --resource-modifier-configmap {{ resource_modifier_configmap }}
-        {% if wait_for_restore %} --wait {% endif %}
-      register: velero_restore_result
-      changed_when: "'Restore completed' in velero_restore_result.stdout or 'created' in velero_restore_result.stdout"
+- name: Show Velero restore result
+  ansible.builtin.debug:
+    msg: "{{ velero_restore_result.stdout }}"
 
-    - name: Show Velero restore result
-      ansible.builtin.debug:
-        msg: "{{ velero_restore_result.stdout }}"
+- name: Verify Velero restore status
+  ansible.builtin.command: velero restore describe {{ restore_name }}
+  register: velero_restore_description
+  changed_when: false
 
-    - name: Verify Velero restore status
-      ansible.builtin.command: velero restore describe {{ restore_name }}
-      register: velero_restore_description
-      changed_when: false
+- name: Display restore description
+  ansible.builtin.debug:
+    msg: "{{ velero_restore_description.stdout }}"
 
-    - name: Display restore description
-      ansible.builtin.debug:
-        msg: "{{ velero_restore_description.stdout }}"
+- name: List datadownloads related to this restore
+  ansible.builtin.command: kubectl -n velero get datadownloads -l velero.io/restore-name={{ restore_name }}
+  register: datadownloads_list
+  changed_when: false
 
-    - name: List datadownloads related to this restore
-      ansible.builtin.command: kubectl -n velero get datadownloads -l velero.io/restore-name={{ restore_name }}
-      register: datadownloads_list
-      changed_when: false
-
-    - name: Display Velero data downloads
-      ansible.builtin.debug:
-        msg: "{{ datadownloads_list.stdout }}"
+- name: Display Velero data downloads
+  ansible.builtin.debug:
+    msg: "{{ datadownloads_list.stdout }}"
 
