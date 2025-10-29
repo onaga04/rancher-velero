@@ -3,16 +3,44 @@
   hosts: target_cluster
   become: yes
   vars_files:
-    - group_vars/all.yml
+    - group_vars/all.yaml
 
   tasks:
-    - include_tasks: tasks/common/install_azure.yml
-    - include_tasks: tasks/common/install_velero.yml
-    - include_tasks: tasks/common/set_kubeconfig.yml
-    - include_tasks: tasks/common/azure_login.yml
+    - name: Install Azure CLI on Azure hosts
+      include_tasks: tasks/common/install_azure.yml
+      when: cloud_provider == 'azure'
+      tags: install_azure_cli
 
-    - include_tasks: tasks/restore/setup_storageclass.yml
-      when: ansible_facts['cloud_provider'] == 'azure'
+    - name: Install full Azure CLI setup on non-Azure hosts
+      include_tasks: tasks/common/install_azure_full.yml
+      when: cloud_provider != 'azure'
+      tags: install_full_azure_cli
+
+     - name: Log in to Azure
+      include_tasks: tasks/common/azure_login.yml
+      tags: azure_login
+      
+    - name: Set KUBECONFIG
+      include_tasks: tasks/common/set_kubeconfig_dest.yml
+      tags: set_kubeconfig
+      
+    - name: Install Velero CLI
+      include_tasks: tasks/common/install_velero.yml
+      tags: install_velero_cli
+
+    - name: Install Velero
+      include_tasks: tasks/common/install_velero.yml
+      tags: install_velero
+
+    - name: Setup snapshot class for Velero
+      include_tasks: tasks/restore/setup_storageclass.yml
+      when: cloud_provider == 'azure'
+      tags: setup_snapshotclass
+
+    - name: Setup configmap
     - include_tasks: tasks/restore/setup_configmap.yml
-    - include_tasks: tasks/restore/create_restore.yml
+      tags: setup_snapshotclass
 
+    - name: Create Velero restore
+    - include_tasks: tasks/restore/create_restore.yml
+      tags: create_backup
