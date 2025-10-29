@@ -9,38 +9,38 @@
     - name: Install Azure CLI on Azure hosts
       include_tasks: tasks/common/install_azure.yml
       when: cloud_provider == 'azure'
-      tags: install_azure_cli
+      tags: Install_Azure_CLI_on_Azure_hosts
 
     - name: Install full Azure CLI setup on non-Azure hosts
       include_tasks: tasks/common/install_azure_full.yml
       when: cloud_provider != 'azure'
-      tags: install_full_azure_cli
+      tags: Install_full_Azure_CLI_setup_on_non-Azure_hosts
 
      - name: Log in to Azure
       include_tasks: tasks/common/azure_login.yml
-      tags: azure_login
+      tags: Log_in_to_Azure
       
     - name: Set KUBECONFIG
       include_tasks: tasks/common/set_kubeconfig_dest.yml
-      tags: set_kubeconfig
+      tags: Set_KUBECONFIG
       
     - name: Install Velero CLI
       include_tasks: tasks/common/install_velero.yml
-      tags: install_velero_cli
+      tags: Install_Velero_CLI
 
     - name: Install Velero
       include_tasks: tasks/common/install_velero.yml
-      tags: install_velero
+      tags: Install_Velero
 
-    - name: Setup snapshot class for Velero
+    - name: Setup storage class 
       include_tasks: tasks/restore/setup_storageclass.yml
       when: cloud_provider == 'azure'
-      tags: setup_snapshotclass
+      tags: Setup_storage_class
 
     - name: Setup configmap
     - include_tasks: tasks/restore/setup_configmap.yml
-      tags: setup_snapshotclass
+      tags: Setup_configmap
 
     - name: Create Velero restore
     - include_tasks: tasks/restore/create_restore.yml
-      tags: create_backup
+      tags: Create_Velero_restore
