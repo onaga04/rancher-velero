@@ -5,19 +5,19 @@
 
 - name: Download Velero CLI tarball
   ansible.builtin.get_url:
-    url: "https://github.com/vmware-tanzu/velero/releases/download/v{{ velero_cli_version }}/velero-v{{ velero_cli_version }}-linux-amd64.tar.gz"
-    dest: "/tmp/velero-v{{ velero_cli_version }}-linux-amd64.tar.gz"
+    url: "https://github.com/vmware-tanzu/velero/releases/download/{{ velero_cli_version }}/velero-{{ velero_cli_version }}-linux-amd64.tar.gz"
+    dest: "/tmp/velero-{{ velero_cli_version }}-linux-amd64.tar.gz"
   when: velero_check.rc != 0
 
 - name: Extract Velero CLI
   ansible.builtin.unarchive:
-    src: "/tmp/velero-v{{ velero_cli_version }}-linux-amd64.tar.gz"
+    src: "/tmp/velero-{{ velero_cli_version }}-linux-amd64.tar.gz"
     dest: "/tmp"
     remote_src: yes
   when: velero_check.rc != 0
 
 - name: Move Velero binary to /usr/local/bin
-  ansible.builtin.command: mv /tmp/velero-v{{ velero_cli_version }}-linux-amd64/velero /usr/local/bin/velero
+  ansible.builtin.command: mv /tmp/velero-{{ velero_cli_version }}-linux-amd64/velero /usr/local/bin/velero
   when: velero_check.rc != 0
 
 - name: Verify Velero installation
