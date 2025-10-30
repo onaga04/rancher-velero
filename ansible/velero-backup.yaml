@@ -17,7 +17,7 @@
       when: cloud_provider == 'azure'
       tags: Install_Azure_CLI_on_Azure_hosts
 
-    - name: Install full Azure CLI setup on non_Azure hosts
+    - name: Install full Azure CLI setup on non Azure hosts
       include_tasks: 
         file: tasks/common/install_azure_full.yml
         apply:
