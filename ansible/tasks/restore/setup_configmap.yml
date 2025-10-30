@@ -1,12 +1,12 @@
 - name: Check if ConfigMap already exists
-  ansible.builtin.command: kubectl get configmap {{ resource_modifier_configmap }} -n {{ namespace }} -o name
+  ansible.builtin.command: kubectl get configmap {{ resource_modifier_configmap }} -n {{ velero_namespace }} -o name
   register: cm_check
   failed_when: false
   changed_when: false
 
 - name: Create ConfigMap YAML if not exists
   ansible.builtin.copy:
-    src: ../../files/change-storage-class-config.yaml
+    src: files/change-storage-class-config.yaml
     dest: /tmp/{{ configmap_name }}.yaml
   when: cm_check.rc != 0
 
@@ -15,7 +15,7 @@
   when: cm_check.rc != 0
 
 - name: Verify ConfigMap creation
-  ansible.builtin.command: kubectl get configmap {{ resource_modifier_configmap }} -n {{ namespace }} -o yaml
+  ansible.builtin.command: kubectl get configmap {{ resource_modifier_configmap }} -n {{ velero_namespace }} -o yaml
   register: cm_info
   changed_when: false
 
