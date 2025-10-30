@@ -31,7 +31,7 @@
 
     - name: Install Velero CLI
       include_tasks: 
-        file: tasks/common/install_velero.yml
+        file: tasks/common/install_velero_cli.yml
         apply:
           tags: Install_Velero_CLI
       tags: Install_Velero_CLI
