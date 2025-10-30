@@ -6,7 +6,7 @@ azure_client_secret: "YOUR_SECRET"
 azure_backup_resource_group: "velero-backup-rg"
 azure_storage_account: "veleroblobstorage"
 azure_blob_container: "velero-backups"
-cloud_provider: 'azure'
+cloud_provider: 'vsphere'
 
 # Velero versions
 velero_cli_version: "v1.15.2"
