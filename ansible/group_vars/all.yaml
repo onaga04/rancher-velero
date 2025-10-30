@@ -28,7 +28,7 @@ velero_namespace: "velero"
 
 # Backup/Restore names
 backup_name: "beta-v2-az-use2-rke2-backup-ansible-1"
-restore_name: "beta-v2-az-use2-rke2-poc2-restore-sql"
+restore_name: "beta-v2-az-use2-rke2-poc2-restore-ansible-1"
 
 # Namespaces to include/exclude in backup/restore
 excluded_namespaces: "kube-system,kube-public,kube-node-lease,default,velero,cattle-system,cattle-fleet-system,fleet-default"     
