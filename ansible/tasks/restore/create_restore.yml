@@ -21,12 +21,4 @@
   ansible.builtin.debug:
     msg: "{{ velero_restore_description.stdout }}"
 
-- name: List datadownloads related to this restore
-  ansible.builtin.command: kubectl -n velero get datadownloads -l velero.io/restore-name={{ restore_name }}
-  register: datadownloads_list
-  changed_when: false
-
-- name: Display Velero data downloads
-  ansible.builtin.debug:
-    msg: "{{ datadownloads_list.stdout }}"
 
