@@ -2,7 +2,7 @@
   ansible.builtin.command: >
     velero restore create {{ restore_name }}
     --from-backup {{ backup_name }}
-    --include-namespaces {{ include_namespaces }}
+    --include-namespaces {{ included_namespaces }}
     --resource-modifier-configmap {{ resource_modifier_configmap }}
     {% if wait_for_restore %} --wait {% endif %}
   register: velero_restore_result
