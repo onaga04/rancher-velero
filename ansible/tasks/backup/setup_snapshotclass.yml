@@ -4,15 +4,15 @@
   failed_when: false
   changed_when: false
 
+- name: Set snapshot class facts
+  ansible.builtin.set_fact:
+    snapshot_class_name: "{{ 'velero-azure-snapshot-class' if cloud_provider == 'azure' else 'velero-vsphere-snapshot-class' }}"
+
 - name: Create VolumeSnapshotClass if not exists
   ansible.builtin.copy:
     src: "{{ 'files/volumesnapshotclass-azure.yaml' if cloud_provider == 'azure' else 'files/volumesnapshotclass-vsphere.yaml' }}"
     dest: /tmp/{{ snapshot_class_name }}.yaml
   when: snapshotclass_check.rc != 0
-
-  - name: Set snapshot class facts
-    ansible.builtin.set_fact:
-      snapshot_class_name: "{{ 'velero-azure-snapshot-class' if cloud_provider == 'azure' else 'velero-vsphere-snapshot-class' }}"
 
 - name: Apply VolumeSnapshotClass YAML
   ansible.builtin.command: kubectl apply -f /tmp/{{ snapshot_class_name }}.yaml
