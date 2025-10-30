@@ -52,14 +52,14 @@
       tags: Setup_storage_class
 
     - name: Setup configmap
-    - include_tasks: 
+      include_tasks: 
         file: tasks/restore/setup_configmap.yml
         apply:
           tags: Setup_configmap
       tags: Setup_configmap
 
     - name: Create Velero restore
-    - include_tasks: 
+      include_tasks: 
         file: tasks/restore/create_restore.yml
         apply:
           tags: Create_Velero_restore
