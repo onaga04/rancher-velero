@@ -27,12 +27,12 @@ snapshot_driver: "disk.csi.azure.com"
 velero_namespace: "velero"
 
 # Backup/Restore names
-backup_name: "beta-v2-az-use2-rke2-backup-ansible-1"
-restore_name: "beta-v2-az-use2-rke2-poc2-restore-ansible-1"
+backup_name: "backup-ansible-1-vsphere"
+restore_name: "restore-ansible-1-vsphere"
 
 # Namespaces to include/exclude in backup/restore
 excluded_namespaces: "kube-system,kube-public,kube-node-lease,default,velero,cattle-system,cattle-fleet-system,fleet-default"     
-included_namespaces: "ns1,ns2,velero-test,mysql-operator,mysql-dbs"
+included_namespaces: "test-ns1,test-ns2,velero-test"
 
 resource_modifier_configmap: "change-storage-class-config"
 storage_class_name: "storageclass"
