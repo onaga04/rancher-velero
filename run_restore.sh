@@ -3,7 +3,7 @@
 # Define available tasks
 declare -a tasks=(
   "Install Azure CLI on Azure hosts"
-  "Install full Azure CLI setup on non-Azure hosts"
+  "Install full Azure CLI setup on non Azure hosts"
   "Log in to Azure"
   "Install Velero CLI"
   "Install Velero"
