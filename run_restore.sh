@@ -1,4 +1,26 @@
 #!/bin/bash
+if ! dpkg -l | grep -q python3-pip; then
+    echo "python3-pip not found. Installing now..."
+    sudo apt update
+    sudo apt install -y python3-pip || {
+        echo "Error: Failed to install python3-pip"
+        exit 1
+    }
+    echo "python3-pip installed successfully."
+else
+    echo "python3-pip is already installed."
+fi
+
+if ! command -v ansible &> /dev/null; then
+    echo "Ansible not found. Installing via pip3 now..."
+    pip3 install ansible || {
+        echo "Error: Failed to install Ansible"
+        exit 1
+    }
+    echo "Ansible installed successfully."
+else
+    echo "Ansible is already installed."
+fi
 
 # Define available tasks
 declare -a tasks=(
