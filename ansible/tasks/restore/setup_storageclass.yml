@@ -6,7 +6,7 @@
 
 - name: Create StorageClass manifest file
   ansible.builtin.copy:
-    src: ../../files/storageclass.yaml
+    src: files/storageclass.yaml
     dest: /tmp/{{ storage_class_name }}.yaml
   when: sc_check.rc != 0
 
