@@ -7,7 +7,7 @@
 - name: Create ConfigMap YAML if not exists
   ansible.builtin.copy:
     src: files/change-storage-class-config.yaml
-    dest: /tmp/{{ configmap_name }}.yaml
+    dest: /tmp/cm.yaml
   when: cm_check.rc != 0
 
 - name: Apply ConfigMap
