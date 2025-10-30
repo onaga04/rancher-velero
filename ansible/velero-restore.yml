@@ -10,36 +10,57 @@
     
   tasks:
     - name: Install Azure CLI on Azure hosts
-      include_tasks: tasks/common/install_azure.yml
+      include_tasks: 
+        file: tasks/common/install_azure.yml
+        apply:
+          tags: Install_Azure_CLI_on_Azure_hosts
       when: cloud_provider == 'azure'
       tags: Install_Azure_CLI_on_Azure_hosts
 
-    - name: Install full Azure CLI setup on non-Azure hosts
-      include_tasks: tasks/common/install_azure_full.yml
+    - name: Install full Azure CLI setup on non Azure hosts
+      include_tasks: 
+        file: tasks/common/install_azure_full.yml
+        apply:
+          tags: Install_full_Azure_CLI_setup_on_non_Azure_hosts 
       when: cloud_provider != 'azure'
-      tags: Install_full_Azure_CLI_setup_on_non-Azure_hosts
+      tags: Install_full_Azure_CLI_setup_on_non_Azure_hosts
 
-     - name: Log in to Azure
+    - name: Log in to Azure
       include_tasks: tasks/common/azure_login.yml
       tags: Log_in_to_Azure
       
     - name: Install Velero CLI
-      include_tasks: tasks/common/install_velero.yml
+      include_tasks: 
+        file: tasks/common/install_velero_cli.yml
+        apply:
+          tags: Install_Velero_CLI
       tags: Install_Velero_CLI
 
     - name: Install Velero
-      include_tasks: tasks/common/install_velero.yml
+      include_tasks:
+        file: tasks/common/install_velero.yml
+        apply:
+          tags: Install_Velero
       tags: Install_Velero
 
     - name: Setup storage class 
-      include_tasks: tasks/restore/setup_storageclass.yml
+      include_tasks: 
+        file: tasks/restore/setup_storageclass.yml
+        apply:
+          tags: Setup_storage_class
       when: cloud_provider == 'azure'
       tags: Setup_storage_class
 
     - name: Setup configmap
-    - include_tasks: tasks/restore/setup_configmap.yml
+    - include_tasks: 
+        file: tasks/restore/setup_configmap.yml
+        apply:
+          tags: Setup_configmap
       tags: Setup_configmap
 
     - name: Create Velero restore
-    - include_tasks: tasks/restore/create_restore.yml
+    - include_tasks: 
+        file: tasks/restore/create_restore.yml
+        apply:
+          tags: Create_Velero_restore
       tags: Create_Velero_restore
