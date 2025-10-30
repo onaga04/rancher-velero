@@ -33,7 +33,7 @@ while true; do
       if (( choice >= 1 && choice <= ${#tasks[@]} )); then
         task_name="${tasks[$((choice-1))]}"
         echo "Running: $task_name"
-        ansible-playbook -i inventory.ini ansible/velero-restore.yaml --tags "$(echo "$task_name" -vvvv | tr ' ' '_')" || {
+        ansible-playbook -i inventory.ini ansible/velero-restore.yaml --tags "$(echo "$task_name" | tr ' ' '_')" -vvvv || {
           echo "Error running $task_name"
         }
       else
