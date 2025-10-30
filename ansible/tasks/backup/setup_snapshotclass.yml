@@ -6,7 +6,7 @@
 
 - name: Create VolumeSnapshotClass if not exists
   ansible.builtin.copy:
-    src: files/volumesnapshotclass.yaml
+    src: "{{ 'files/volumesnapshotclass-azure.yaml' if cloud_provider == 'azure' else 'files/volumesnapshotclass-vsphere.yaml' }}"
     dest: /tmp/{{ snapshot_class_name }}.yaml
   when: snapshotclass_check.rc != 0
 
