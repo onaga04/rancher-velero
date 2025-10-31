@@ -19,10 +19,6 @@ kubeconfig_path: "/etc/rancher/rke2/rke2.yaml"
 source_storage_class: "managed-csi"
 target_storage_class: "azure-csi"
 
-# SnapshotClass names
-snapshot_class_name: "velero-azure-snapshot-class"
-snapshot_driver: "disk.csi.azure.com"
-
 # Velero namespaces
 velero_namespace: "velero"
 
