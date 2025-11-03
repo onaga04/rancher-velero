@@ -4,18 +4,24 @@
   failed_when: false
   changed_when: false
 
+- name: Set driver for volumesnapshotclass
+  ansible.builtin.template:
+    src: files/change-storage-class-config.yaml.j2
+    dest: files/change-storage-class-config.yaml
+    mode: '0600'
+    
 - name: Create ConfigMap YAML if not exists
   ansible.builtin.copy:
-    src: "{{ 'files/change-storage-class-config-azure.yaml' if cloud_provider == 'azure' else 'files/change-storage-class-config-vsphere.yaml' }}"
-    dest: /tmp/{{ resource_modifier_configmap }}.yaml
+    src: files/change-storage-class-config.yaml
+    dest: /tmp/change-storage-class-config.yaml
   when: cm_check.rc != 0
 
 - name: Apply ConfigMap
-  ansible.builtin.command: kubectl apply -f /tmp/{{ resource_modifier_configmap }}.yaml
+  ansible.builtin.command: kubectl apply -f /tmp/change-storage-class-config.yaml
   when: cm_check.rc != 0
 
 - name: Verify ConfigMap creation
-  ansible.builtin.command: kubectl get configmap {{ resource_modifier_configmap }} -n {{ velero_namespace }} -o yaml
+  ansible.builtin.command: kubectl get configmap change-storage-class-config -n {{ velero_namespace }} -o yaml
   register: cm_info
   changed_when: false
 
