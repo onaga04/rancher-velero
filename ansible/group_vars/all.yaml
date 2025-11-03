@@ -30,8 +30,7 @@ restore_name: "restore-ansible-1-vsphere"
 excluded_namespaces: "kube-system,kube-public,kube-node-lease,default,velero,cattle-system,cattle-fleet-system,fleet-default"     
 included_namespaces: "test-ns1,test-ns2,velero-test"
 
-resource_modifier_configmap: "change-storage-class-config"
-storage_class_name: "storageclass"
+storage_class_name: "azure-csi"
 
 snapshot_volumes: true
 snapshot_move_data: true
