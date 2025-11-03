@@ -1,0 +1,10 @@
+apiVersion: snapshot.storage.k8s.io/v1
+kind: VolumeSnapshotClass
+metadata:
+  name: velero-snapshot-class
+  labels:
+    velero.io/csi-volumesnapshot-class: "true"
+driver: {{ driver }}
+deletionPolicy: Delete
+parameters:
+  incremental: "true"
