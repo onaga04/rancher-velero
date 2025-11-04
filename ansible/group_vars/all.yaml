@@ -31,6 +31,7 @@ excluded_namespaces: "kube-system,kube-public,kube-node-lease,default,velero,cat
 included_namespaces: "test-ns1,test-ns2,velero-test"
 
 storage_class_name: "azure-csi"
+resource_modifier_configmap: "change-storage-class-config"
 
 snapshot_volumes: true
 snapshot_move_data: true
