@@ -41,7 +41,6 @@ declare -a tasks=(
   "Log in to Azure"
   "Install Velero CLI"
   "Install Velero"
-  "Setup storage class"
   "Setup configmap"
   "Velero CRDs restore"
   "Velero cluster scoped dependencies restore"

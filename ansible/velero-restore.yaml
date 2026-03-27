@@ -40,14 +40,6 @@
           tags: Install_Velero
       tags: Install_Velero
 
-    - name: Setup storage class 
-      include_tasks: 
-        file: tasks/restore/setup_storageclass.yml
-        apply:
-          tags: Setup_storage_class
-      when: cloud_provider == 'azure'
-      tags: Setup_storage_class
-
     - name: Setup configmap
       include_tasks: 
         file: tasks/restore/setup_configmap.yml
