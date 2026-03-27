@@ -1,6 +1,5 @@
 ---
 # tasks/common/install_azure.yml
-# Purpose: Ensure Azure CLI is installed (optimized for Azure VMs / Ubuntu)
 
 - name: Check if Azure CLI is already installed
   command: az version
