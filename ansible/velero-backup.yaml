@@ -4,9 +4,6 @@
   gather_facts: no
   vars_files:
     - group_vars/all.yaml
-  environment:
-    KUBECONFIG: "{{ kubeconfig_path }}"
-    PATH: "{{ ansible_env.PATH }}:/var/lib/rancher/rke2/bin"
 
   tasks:
     - name: Install Azure CLI on Azure hosts
@@ -50,10 +47,28 @@
           tags: Setup_snapshot_class_for_Velero
       tags: Setup_snapshot_class_for_Velero
 
-    - name: Create Velero backup
+    - name: Velero CRDs backup
       include_tasks:
-        file: tasks/backup/create_backup.yml
+        file: tasks/backup/backup_crds.yml
         apply:
-          tags: Create_Velero_backup
-      tags: Create_Velero_backup
+          tags: Velero_CRDs_backup
+      tags: Velero_CRDs_backup
+
+    - name: Velero cluster scoped dependencies backup
+      include_tasks:
+        file: tasks/backup/backup_cluster_dependencies.yml
+        apply:
+          tags: Velero_cluster_scoped_dependencies_backup
+      tags: Velero_cluster_scoped_dependencies_backup
+
+    - name: Velero namespaced resources backup
+      include_tasks:
+        file: tasks/backup/backup_namespaced_resources.yml
+        apply:
+          tags: Velero_namespaced_resources_backup
+      tags: Velero_namespaced_resources_backup
+
+
+
+
 

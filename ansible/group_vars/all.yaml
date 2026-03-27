@@ -12,19 +12,24 @@ cloud_provider: 'vsphere'
 velero_cli_version: "v1.15.2"
 azure_plugin_version: "v1.12.2"
 
-# Cluster kubeconfig path
-kubeconfig_path: "/etc/rancher/rke2/rke2.yaml"
 
-# StorageClass names
+# Resource modifier values
 source_storage_class: "managed-csi"
 target_storage_class: "azure-csi"
+pvc_name: "pvc_name_a
+match_label_app: ""
 
 # Velero namespaces
 velero_namespace: "velero"
 
 # Backup/Restore names
-backup_name: "backup-ansible-1-vsphere"
-restore_name: "restore-ansible-1-vsphere"
+backup_name_crds: "backup-ansible-1-vsphere"
+backup_name_rbac: "backup-ansible-1-vsphere"
+backup_name_workload: "backup-ansible-1-vsphere"
+
+restore_name_crds: "restore-ansible-1-vsphere"
+restore_name_rbac: "restore-ansible-1-vsphere"
+restore_name_workload: "restore-ansible-1-vsphere"
 
 # Namespaces to include/exclude in backup/restore
 excluded_namespaces: "kube-system,kube-public,kube-node-lease,default,velero,cattle-system,cattle-fleet-system,fleet-default"     
@@ -37,3 +42,5 @@ snapshot_volumes: true
 snapshot_move_data: true
 wait_for_backup: true
 wait_for_restore: true
+async: 3600
+poll: 30

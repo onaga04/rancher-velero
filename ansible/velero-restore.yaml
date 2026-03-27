@@ -4,9 +4,6 @@
   become: yes
   vars_files:
     - group_vars/all.yaml
-  environment:
-    KUBECONFIG: "{{ kubeconfig_path }}"
-    PATH: "{{ ansible_env.PATH }}:/var/lib/rancher/rke2/bin"
     
   tasks:
     - name: Install Azure CLI on Azure hosts
@@ -58,9 +55,24 @@
           tags: Setup_configmap
       tags: Setup_configmap
 
-    - name: Create Velero restore
-      include_tasks: 
-        file: tasks/restore/create_restore.yml
+    - name: Velero CRDs restore
+      include_tasks:
+        file: tasks/restore/restore_crds.yml
         apply:
-          tags: Create_Velero_restore
-      tags: Create_Velero_restore
+          tags: Velero_CRDs_restore
+      tags: Velero_CRDs_restore
+
+    - name: Velero cluster scoped dependencies restore
+      include_tasks:
+        file: tasks/restore/restore_cluster_dependencies.yml
+        apply:
+          tags: Velero_cluster_scoped_dependencies_restore
+      tags: Velero_cluster_scoped_dependencies_restore
+
+    - name: Velero namespaced resources restore
+      include_tasks:
+        file: tasks/restore/restore_namespaced_resources.yml
+        apply:
+          tags: Velero_namespaced_resources_restore
+      tags: Velero_namespaced_resources_restore
+

@@ -1,4 +1,7 @@
 #!/bin/bash
+
+CLOUD_PROVIDER="AKS"
+
 if ! dpkg -l | grep -q python3-pip; then
     echo "python3-pip not found. Installing now..."
     sudo apt update
@@ -22,6 +25,14 @@ else
     echo "Ansible is already installed."
 fi
 
+if [ "$CLOUD_PROVIDER" == "AKS" ]; then 
+  export KUBECONFIG=/var/lib/kubelet/kubeconfig
+elif [ "$CLOUD_PROVIDER" == "VSPHERE" -o "$CLOUD_PROVIDER" == "AZURE" ]; then
+  export PATH=$PATH:/var/lib/rancher/rke2/bin
+  export KUBECONFIG=/etc/rancher/rke2/rke2.yaml
+else
+    echo "Unknown Cloud Provider: $CLOUD_PROVIDER"
+fi
 
 # Define available tasks
 declare -a tasks=(
@@ -31,7 +42,9 @@ declare -a tasks=(
   "Install Velero CLI"
   "Install Velero"
   "Setup snapshot class for Velero"
-  "Create Velero backup"
+  "Velero CRDs backup"
+  "Velero cluster scoped dependencies backup"
+  "Velero namespaced resources backup"
 )
 
 # Function to display tasks

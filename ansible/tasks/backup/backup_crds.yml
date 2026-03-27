@@ -1,0 +1,23 @@
+- name: Backup only CRDs
+  ansible.builtin.command: >
+    velero backup create {{ backup_name_crds }}
+    --include-resources customresourcedefinitions.apiextensions.k8s.io
+    --include-cluster-resources=true
+    --exclude-resources *.cattle.io
+    --selector '!cattle.io/creator,!field.cattle.io/creatorId'
+    {% if wait_for_backup %} --wait {% endif %}
+  register: velero_backup_crds_result
+  changed_when: "'completed' in velero_backup_crds_result.stdout or 'created' in velero_backup_crds_result.stdout"
+
+- name: Show Velero backup result
+  ansible.builtin.debug:
+    msg: "{{ velero_backup_crds_result.stdout }}"
+
+- name: Verify Velero backup status
+  ansible.builtin.command: velero backup describe {{ backup_name }}
+  register: velero_backup_description
+  changed_when: false
+
+- name: Display backup description
+  ansible.builtin.debug:
+    msg: "{{ velero_backup_description.stdout }}"

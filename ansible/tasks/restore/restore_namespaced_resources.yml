@@ -1,0 +1,26 @@
+- name: Velero restore for Namespaced Resources
+  ansible.builtin.command: >
+    velero restore create {{ restore_name_workload }}
+    --from-backup {{ backup_name_workload }}
+    --include-namespaces {{ included_namespaces }}
+    --resource-modifier-configmap change-storage-class-config
+    {% if wait_for_restore %} --wait {% endif %}
+  async: {{ async }}
+  poll: {{ poll }}
+  register: velero_restore_namespaced_result
+  changed_when: "'completed' in velero_restore_namespaced_crds_result.stdout or 'created' in velero_restore_namespaced_crds_result.stdout
+
+- name: Show Velero restore result
+  ansible.builtin.debug:
+    msg: "{{ velero_restore_namespaced_result.stdout }}"
+
+- name: Verify Velero restore status
+  ansible.builtin.command: velero restore describe {{ restore_name }}
+  register: velero_restore_description
+  changed_when: false
+
+- name: Display restore description
+  ansible.builtin.debug:
+    msg: "{{ velero_restore_description.stdout }}"
+
+
