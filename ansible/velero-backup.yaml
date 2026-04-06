@@ -45,7 +45,7 @@
         file: tasks/backup/setup_snapshotclass.yml
         apply:
           tags: Setup_snapshot_class_for_Velero
-      loop: "{{ azure_csi_drivers }}"
+      loop: "{{ csi_drivers }}"
       loop_control:
         loop_var: driver_item
       tags: Setup_snapshot_class_for_Velero

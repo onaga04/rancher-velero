@@ -27,7 +27,7 @@ velero_namespace: "velero"
 
 # Velero volumesnapshotclass
 vsphere_storage_policy: "vSphere Default Storage Policy"
-azure_csi_drivers:
+csi_drivers:
   - { name: "azure-disk-snapshot", driver: "disk.csi.azure.com" }
   - { name: "azure-file-snapshot", driver: "file.csi.azure.com" }
 
