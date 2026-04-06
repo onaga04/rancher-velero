@@ -1,33 +1,30 @@
-- name: Check if VolumeSnapshotClass already exists
-  ansible.builtin.command: kubectl get volumesnapshotclass {{ snapshot_class_name }} -o name
+- name: Check if VolumeSnapshotClass {{ driver_item.name }} already exists
+  ansible.builtin.command: kubectl get volumesnapshotclass {{ driver_item.name }} -o name
   register: snapshotclass_check
   failed_when: false
   changed_when: false
 
-- name: Set driver for volumesnapshotclass
+- name: Set driver for {{ driver_item.name }}
   ansible.builtin.template:
     src: files/volumesnapshotclass.yaml.j2
-    dest: files/volumesnapshotclass.yaml
+    dest: "/tmp/{{ driver_item.name }}.yaml"
     mode: '0600'
-
-- name: Create VolumeSnapshotClass if not exists
-  ansible.builtin.copy:
-    src: files/volumesnapshotclass.yaml
-    dest: /tmp/{{ snapshot_class_name }}.yaml
-  when: snapshotclass_check.rc != 0
+  vars:
+    snapshot_class_name: "{{ driver_item.name }}"
+    driver: "{{ driver_item.driver }}"
 
 - name: Apply VolumeSnapshotClass YAML
-  ansible.builtin.command: kubectl apply -f /tmp/{{ snapshot_class_name }}.yaml
+  ansible.builtin.command: kubectl apply -f /tmp/{{ driver_item.name }}.yaml
   when: snapshotclass_check.rc != 0
 
 - name: Annotate VolumeSnapshotClass for Velero
   ansible.builtin.command: >
-    kubectl annotate volumesnapshotclass {{ snapshot_class_name }} velero.io/csi-volumesnapshot-class="true" --overwrite
+    kubectl annotate volumesnapshotclass {{ driver_item.name }} velero.io/csi-volumesnapshot-class="true" --overwrite
   register: annotate_result
   changed_when: "'annotated' in annotate_result.stdout or 'configured' in annotate_result.stdout"
 
 - name: Verify VolumeSnapshotClass setup
-  ansible.builtin.command: kubectl get volumesnapshotclass {{ snapshot_class_name }} -o yaml
+  ansible.builtin.command: kubectl get volumesnapshotclass {{ driver_item.name }} -o yaml
   register: snapshotclass_info
   changed_when: false
 
