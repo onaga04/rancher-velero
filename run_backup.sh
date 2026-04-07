@@ -1,6 +1,6 @@
 #!/bin/bash
 
-CLOUD_PROVIDER="AKS"
+CLOUD_PROVIDER="RKE1"
 
 if ! dpkg -l | grep -q python3-pip; then
     echo "python3-pip not found. Installing now..."
@@ -27,9 +27,15 @@ fi
 
 if [ "$CLOUD_PROVIDER" == "AKS" ]; then 
   export KUBECONFIG=/var/lib/kubelet/kubeconfig
-elif [ "$CLOUD_PROVIDER" == "VSPHERE" -o "$CLOUD_PROVIDER" == "AZURE" ]; then
+elif [ "$CLOUD_PROVIDER" == "RKE2" ]; then
   export PATH=$PATH:/var/lib/rancher/rke2/bin
   export KUBECONFIG=/etc/rancher/rke2/rke2.yaml
+elif [ "$CLOUD_PROVIDER" == "RKE1" ]; then
+  export KUBECONFIG=/etc/kubernetes/ssl/kubecfg-kube-node.yaml
+  K8S_VERSION=$(docker ps | grep hyperkube | head -n 1 | awk -F: '{print $2}' | awk '{print $1}' | cut -d'-' -f1) 
+  curl -LO "https://dl.k8s.io/release/${K8S_VERSION}/bin/linux/amd64/kubectl"
+  chmod +x ./kubectl
+  sudo mv ./kubectl /usr/local/bin/kubectl
 else
     echo "Unknown Cloud Provider: $CLOUD_PROVIDER"
 fi
