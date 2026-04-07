@@ -3,7 +3,8 @@
     velero backup create {{ backup_name_workload }}
     --include-namespaces {{ included_namespaces }}
     --exclude-resources pods,events
-    {% if snapshot_volumes %} --snapshot-volumes {% endif %}
+    --default-volumes-to-fs-backup
+    --snapshot-volumes={{ snapshot_volumes | default(true) | lower }}
     {% if snapshot_move_data %} --snapshot-move-data {% endif%}
     {% if wait_for_backup %} --wait {% endif %}
   async: {{ async }}

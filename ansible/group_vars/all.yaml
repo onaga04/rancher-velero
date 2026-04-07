@@ -30,8 +30,7 @@ vsphere_storage_policy: "vSphere Default Storage Policy"
 csi_drivers:
   - { name: "azure-disk-snapshot", driver: "disk.csi.azure.com" }
   - { name: "azure-file-snapshot", driver: "file.csi.azure.com" }
-
-
+  - { name: "vsphere-snapshot", driver: "csi.vsphere.vmware.com" }
 
 # Backup/Restore names
 backup_name_crds: "backup-ansible-1-vsphere"
