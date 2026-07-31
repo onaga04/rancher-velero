@@ -1,0 +1,16 @@
+apiVersion: snapshot.storage.k8s.io/v1
+kind: VolumeSnapshotClass
+metadata:
+  name: {{ snapshot_class_name }}
+  labels:
+    velero.io/csi-volumesnapshot-class: "true"
+driver: {{ driver }}
+deletionPolicy: Delete
+{% if driver == 'disk.csi.azure.com' %}
+parameters:
+  incremental: "true"
+{% elif driver == 'csi.vsphere.vmware.com' %}
+parameters:
+  storagepolicyname: "{{ vsphere_storage_policy | default('vSphere Default Storage Policy') }}"
+{% else %}
+{% endif %}

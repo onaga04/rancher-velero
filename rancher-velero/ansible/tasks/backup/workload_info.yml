@@ -1,0 +1,79 @@
+---
+# START ASYNCHRONOUS KUBECTL FETCHES
+- name: Gather Deployments 
+  ansible.builtin.command: kubectl get deployment -A -o json
+  async: 60
+  poll: 0
+  register: async_deployments
+
+- name: Gather StatefulSets 
+  ansible.builtin.command: kubectl get statefulset -A -o json
+  async: 60
+  poll: 0
+  register: async_statefulsets
+
+- name: Gather DaemonSets 
+  ansible.builtin.command: kubectl get daemonset -A -o json
+  async: 60
+  poll: 0
+  register: async_daemonsets
+
+- name: Gather CronJobs 
+  ansible.builtin.command: kubectl get cronjob -A -o json
+  async: 60
+  poll: 0
+  register: async_cronjobs
+
+
+# WAIT FOR ALL TASKS TO COMPLETE
+- name: Wait for Deployments
+  ansible.builtin.async_status:
+    jid: "{{ async_deployments.ansible_job_id }}"
+  register: info_deployments
+  until: info_deployments.finished
+  retries: 15
+  delay: 5
+
+- name: Wait for StatefulSets
+  ansible.builtin.async_status:
+    jid: "{{ async_statefulsets.ansible_job_id }}"
+  register: info_statefulsets
+  until: info_statefulsets.finished
+  retries: 12
+  delay: 2
+
+- name: Wait for DaemonSets
+  ansible.builtin.async_status:
+    jid: "{{ async_daemonsets.ansible_job_id }}"
+  register: info_daemonsets
+  until: info_daemonsets.finished
+  retries: 12
+  delay: 2
+
+- name: Wait for CronJobs
+  ansible.builtin.async_status:
+    jid: "{{ async_cronjobs.ansible_job_id }}"
+  register: info_cronjobs
+  until: info_cronjobs.finished
+  retries: 12
+  delay: 2
+
+
+# COMBINE RESULTS AND LOG STATES
+- name: Log all workload original states at once
+  ansible.builtin.copy:
+    dest: "files/backup_states/{{ item }}_original_state.txt"
+    mode: '0644'
+    content: |
+      {% set d_items = (info_deployments.stdout | from_json)['items'] | default([]) %}
+      {% set s_items = (info_statefulsets.stdout | from_json)['items'] | default([]) %}
+      {% set ds_items = (info_daemonsets.stdout | from_json)['items'] | default([]) %}
+      {% set c_items = (info_cronjobs.stdout | from_json)['items'] | default([]) %}
+      {% set all_resources = d_items + s_items + ds_items + c_items %}
+      {% set ns_workloads = all_resources | selectattr('metadata.namespace', 'equalto', item) | list %}
+      {% for resource in ns_workloads %}
+      {{ resource.kind | lower }} - {{ resource.metadata.name }} - {{ resource.spec.replicas | default(0) if resource.kind in ['Deployment', 'StatefulSet'] else (resource.spec.jobTemplate.spec.suspend | default(false) | string | lower) if resource.kind == 'CronJob' else 'N/A' }}
+      {% endfor %}
+  loop: "{{ included_namespaces.split(',') }}"
+
+#      {{ resource.kind | lower }} - {{ resource.metadata.name }} - {{ resource.spec.replicas if resource.kind != 'CronJob' else (resource.spec.jobTemplate.spec.suspend | default(false) | string | lower) | default(0) }}

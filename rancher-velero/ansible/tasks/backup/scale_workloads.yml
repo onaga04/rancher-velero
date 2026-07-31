@@ -1,0 +1,65 @@
+---
+# START ASYNCHRONOUS KUBECTL FETCHES
+- name: Gather Deployments 
+  ansible.builtin.command: kubectl get deployment -A -o json
+  async: 60
+  poll: 0
+  register: async_deployments
+
+- name: Gather StatefulSets 
+  ansible.builtin.command: kubectl get statefulset -A -o json
+  async: 60
+  poll: 0
+  register: async_statefulsets
+
+- name: Gather CronJobs 
+  ansible.builtin.command: kubectl get cronjob -A -o json
+  async: 60
+  poll: 0
+  register: async_cronjobs
+
+
+# WAIT FOR DATA TO BE READY
+- name: Wait for Deployment gathering
+  ansible.builtin.async_status:
+    jid: "{{ async_deployments.ansible_job_id }}"
+  register: deployments
+  until: deployments.finished
+  retries: 12
+  delay: 2
+
+- name: Wait for StatefulSet gathering
+  ansible.builtin.async_status:
+    jid: "{{ async_statefulsets.ansible_job_id }}"
+  register: statefulsets
+  until: statefulsets.finished
+  retries: 12
+  delay: 2
+
+- name: Wait for CronJob gathering
+  ansible.builtin.async_status:
+    jid: "{{ async_cronjobs.ansible_job_id }}"
+  register: cronjobs
+  until: cronjobs.finished
+  retries: 12
+  delay: 2
+
+
+# SCALE DOWN & SUSPEND WORKLOADS
+- name: Scale down Deployments to zero concurrently
+  ansible.builtin.shell: "kubectl scale deployment {{ item.metadata.name }} -n {{ item.metadata.namespace }} --replicas=0 &"
+  loop: "{{ (deployments.stdout | from_json)['items'] | default([]) }}"
+  when: item.metadata.namespace in included_namespaces.split(',')
+  changed_when: false
+
+- name: Scale down StatefulSets to zero concurrently
+  ansible.builtin.shell: "kubectl scale statefulset {{ item.metadata.name }} -n {{ item.metadata.namespace }} --replicas=0 &"
+  loop: "{{ (statefulsets.stdout | from_json)['items'] | default([]) }}"
+  when: item.metadata.namespace in included_namespaces.split(',')
+  changed_when: false
+
+- name: Suspend CronJobs concurrently
+  ansible.builtin.shell: "kubectl patch cronjob {{ item.metadata.name }} -n {{ item.metadata.namespace }} -p '{\"spec\":{\"suspend\":true}}' &"
+  loop: "{{ (cronjobs.stdout | from_json)['items'] | default([]) }}"
+  when: item.metadata.namespace in included_namespaces.split(',')
+  changed_when: false

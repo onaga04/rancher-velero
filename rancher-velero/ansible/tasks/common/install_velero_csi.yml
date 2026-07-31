@@ -1,0 +1,40 @@
+- name: Create Azure credentials file for Velero
+  ansible.builtin.template:
+    src: "{{ playbook_dir }}/files/credentials-velero.txt.j2"
+    dest: "{{ playbook_dir }}/files/credentials-velero.txt"
+    mode: '0600'
+
+- name: Install Velero with Azure plugin
+  ansible.builtin.command:
+    argv:
+      - "{{ velero_bin_path | default('/usr/local/bin/velero') }}"
+      - install
+      - --provider
+      - azure
+      - --plugins
+      - "velero/velero-plugin-for-microsoft-azure:{{ azure_plugin_version }}"
+      - --bucket
+      - "{{ azure_blob_container }}"
+      - --secret-file
+      - "{{ playbook_dir }}/files/credentials-velero.txt"
+      - --backup-location-config
+      - "resourceGroup={{ azure_backup_resource_group }},storageAccount={{ azure_storage_account }},subscriptionId={{ azure_subscription_id }}"
+      - --features=EnableCSI
+      - --use-node-agent
+  register: velero_install_output
+  tags: Install_Velero
+  changed_when: "'Velero is already installed' not in velero_install_output.stdout"
+
+
+#      - --node-agent-configmap=velero-restore-config
+
+- name: Verify Velero installation in cluster
+  ansible.builtin.command:
+    cmd: kubectl get pods -n velero
+  register: velero_pods
+  changed_when: false
+
+- name: Display Velero pods
+  ansible.builtin.debug:
+    msg: "{{ velero_pods.stdout_lines }}"
+

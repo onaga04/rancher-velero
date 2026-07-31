@@ -1,0 +1,45 @@
+- name: Get user-defined cluster-scoped resources
+  ansible.builtin.shell: |
+    set -o pipefail
+    
+    # Isolate custom ClusterRoles
+    ROLES=$(kubectl get clusterroles -o jsonpath='{range .items[*]}{.metadata.name}{"\n"}{end}' | grep -vE '^system:|^kubernetes:|^cattle-|^rancher-|^cluster-admin$|^admin$|^edit$|^view$|^calico|^canal|^flannel|^vsphere|^pushprox|^p-[a-z0-9]{5}-|^rt-|^cert-manager|^monitoring|^prometheus|^gatekeeper|^logging|^proxy-' | paste -sd, -)
+    
+    # Isolate custom ClusterRoleBindings
+    BINDINGS=$(kubectl get clusterrolebindings -o jsonpath='{range .items[*]}{.metadata.name}{"\n"}{end}' | grep -vE '^system:|^kubernetes:|^cattle-|^rancher-|^cluster-admin$|^calico|^canal|^flannel|^vsphere|^pushprox|^crb-|^globaladmin-|^cert-manager|^monitoring|^prometheus|^gatekeeper|^logging|^proxy-|^metrics-server' | paste -sd, -)
+    
+    # Isolate non-system PriorityClasses
+    PRIORITIES=$(kubectl get priorityclasses -o jsonpath='{range .items[*]}{.metadata.name}{"\n"}{end}' | grep -vE '^system-cluster-critical$|^system-node-critical$' | paste -sd, -)
+    
+    # Isolate custom IngressClasses 
+    INGRESSES=$(kubectl get ingressclasses -o jsonpath='{range .items[*]}{.metadata.name}{"\n"}{end}' | grep -vE '^nginx$|^nginx-ext$' | paste -sd, -)
+    
+    # Combine lists
+    echo "$ROLES,$BINDINGS,$PRIORITIES,$INGRESSES" | sed 's/,\+/,/g' | sed 's/^,//;s/,$//'
+  args:
+    executable: /bin/bash
+  register: filtered_rbac_resources
+  changed_when: false
+
+- name: Backup clean cluster-scoped configurations
+  ansible.builtin.command: >
+    velero backup create {{ backup_name_rbac }}
+    --include-resources "{{ filtered_rbac_resources.stdout }}"
+    {% if wait_for_backup %} --wait {% endif %}
+  register: velero_backup_rbac_result
+  changed_when: "'completed' in velero_backup_rbac_result.stdout or 'created' in velero_backup_rbac_result.stdout"
+  when: filtered_rbac_resources.stdout | length > 0
+
+
+- name: Show Velero backup result
+  ansible.builtin.debug:
+    msg: "{{ velero_backup_rbac_result.stdout }}"
+
+- name: Verify Velero backup status
+  ansible.builtin.command: velero backup describe {{ backup_name_rbac }}
+  register: velero_backup_description
+  changed_when: false
+
+- name: Display backup description
+  ansible.builtin.debug:
+    msg: "{{ velero_backup_description.stdout }}"

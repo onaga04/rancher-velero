@@ -1,0 +1,48 @@
+- name: Check if Velero is already installed
+  ansible.builtin.command: which velero
+  register: velero_check
+  ignore_errors: true
+  changed_when: false
+
+
+- name: Set Velero executable path if found
+  ansible.builtin.set_fact:
+    velero_bin_path: "{{ velero_check.stdout }}"
+  when: velero_check.rc == 0
+- name: Ensure local bin directory exists
+  ansible.builtin.file:
+    path: "{{ lookup('env', 'HOME') }}/.local/bin"
+    state: directory
+  when: velero_check.rc != 0
+
+- name: Download Velero CLI tarball
+  ansible.builtin.get_url:
+    url: "https://github.com/vmware-tanzu/velero/releases/download/{{ velero_cli_version }}/velero-{{ velero_cli_version }}-linux-amd64.tar.gz"
+    dest: "/tmp/velero-{{ velero_cli_version }}-linux-amd64.tar.gz"
+  when: velero_check.rc != 0
+
+- name: Extract Velero CLI
+  ansible.builtin.unarchive:
+    src: "/tmp/velero-{{ velero_cli_version }}-linux-amd64.tar.gz"
+    dest: "/tmp"
+    remote_src: true
+  when: velero_check.rc != 0
+
+- name: Move Velero binary to /usr/local/bin
+  ansible.builtin.command: "mv /tmp/velero-{{ velero_cli_version }}-linux-amd64/velero {{ lookup('env', 'HOME') }}/.local/bin/velero"
+  when: velero_check.rc != 0
+
+- name: Set Velero executable path for fresh install
+  ansible.builtin.set_fact:
+    velero_bin_path: "{{ lookup('env', 'HOME') }}/.local/bin/velero"
+  when: velero_check.rc != 0
+
+
+- name: Verify Velero installation
+  ansible.builtin.command: "{{ velero_bin_path }} version --client-only"
+  register: velero_version_check
+  changed_when: false
+
+- name: Show Velero version
+  ansible.builtin.debug:
+    msg: "Velero installed: {{ velero_version_check.stdout }}"

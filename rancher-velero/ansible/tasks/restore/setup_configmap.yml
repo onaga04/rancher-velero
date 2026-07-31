@@ -1,0 +1,24 @@
+- name: Check if ConfigMap already exists
+  ansible.builtin.command: kubectl get configmap {{ resource_modifier_configmap }} -n {{ velero_namespace }} -o name
+  register: cm_check
+  failed_when: false
+  changed_when: false
+
+- name: Set values for storageclass
+  ansible.builtin.template:
+    src: files/change-storage-class-config.yaml.j2
+    dest: files/change-storage-class-config.yaml
+    mode: '0600'
+
+- name: Apply ConfigMap
+  ansible.builtin.command: kubectl apply -f files/change-storage-class-config.yaml
+
+- name: Verify ConfigMap creation
+  ansible.builtin.command: kubectl get configmap change-storage-class-config -n {{ velero_namespace }} -o yaml
+  register: cm_info
+  changed_when: false
+
+- name: Display ConfigMap info
+  ansible.builtin.debug:
+    msg: "{{ cm_info.stdout }}"
+

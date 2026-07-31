@@ -1,0 +1,24 @@
+- name: Velero restore for Cluster-Scoped RBAC, PriorityClasses and IngressClasses
+  ansible.builtin.command: >
+    {{ velero_bin_path | default('velero') }}  restore create {{ restore_name_rbac }}
+    --from-backup {{ backup_name_rbac }}
+    --include-resources clusterroles.rbac.authorization.k8s.io,clusterrolebindings.rbac.authorization.k8s.io,priorityclasses.scheduling.k8s.io,ingressclasses.networking.k8s.io
+    --include-cluster-resources=true
+    {% if wait_for_restore %} --wait {% endif %}
+  register: velero_restore_rbac_result
+  changed_when: "'completed' in velero_restore_rbac_result.stdout or 'created' in velero_restore_rbac_result.stdout"
+
+- name: Show Velero restore result
+  ansible.builtin.debug:
+    msg: "{{ velero_restore_rbac_result.stdout }}"
+
+- name: Verify Velero restore status
+  ansible.builtin.command: velero restore describe {{ restore_name_rbac }}
+  register: velero_restore_description
+  changed_when: false
+
+- name: Display restore description
+  ansible.builtin.debug:
+    msg: "{{ velero_restore_description.stdout }}"
+
+

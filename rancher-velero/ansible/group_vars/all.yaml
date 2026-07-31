@@ -1,0 +1,68 @@
+# Azure credentials and backup configuration
+azure_subscription_id: ""
+azure_tenant_id: ""
+azure_client_id: ""
+azure_client_secret: ""
+azure_backup_resource_group: "rg-velero-migration"
+azure_storage_account: "veleromigration"
+azure_blob_container: "valero-storage-account"
+cloud_provider: 'azure'
+
+# Velero versions
+velero_cli_version: "v1.15.2"
+azure_plugin_version: "v1.12.2"
+
+
+# Velero namespaces
+velero_namespace: "velero"
+
+# Velero volumesnapshotclass
+vsphere_storage_policy: "vSphere Default Storage Policy"
+csi_drivers:
+  - { name: "azure-disk-snapshot", driver: "disk.csi.azure.com" }
+  - { name: "vsphere-snapshot", driver: "csi.vsphere.vmware.com" }
+
+excluded_namespaces: "kube-system,kube-public,kube-node-lease,default,velero,cattle-system,cattle-fleet-system,fleet-default"
+resource_modifier_configmap: "change-storage-class-config"
+
+default-volumes-to-fs-backup: false
+snapshot_volumes: false
+snapshot_move_data: false
+wait_for_backup: true
+wait_for_restore: true
+async_timeout: 3600
+poll_interval: 30
+
+
+
+backup_name_crds: "backup-test-crd"
+backup_name_rbac: "backup-test-rbac"
+
+restore_name_crds: "restore-test-crd"
+restore_name_rbac: "restore-test-rbac"
+
+
+included_namespaces: "uat"
+backup_name_workload: "backup-uat"
+restore_name_workload: "restore-uat1"
+
+
+#velero_skip_storage_classes: managed-csi,managed-csi-economy,managed-csi-premium
+
+#velero_fs_storage_classes: azurefile,azurefile-csi,azurefile-csi-premium,default
+
+velero_fs_storage_classes: test
+
+velero_skip_storage_classes: azurefile,azurefile-csi,azurefile-csi-premium,default
+
+rancher_project_id: p-xxx
+rancher_cluster_id: c-xxx
+
+
+project_mappings:
+  - { old: "-", new: "-" }
+
+
+storage_class_mappings:
+  - { source: "managed-csi-economy", target: "managed-csi" }
+

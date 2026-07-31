@@ -1,0 +1,13 @@
+apiVersion: v1
+data:
+  {% for mapping in storage_class_mappings %}
+  {{ mapping.source }}: {{ mapping.target }}
+  {% endfor %}
+  
+kind: ConfigMap
+metadata:
+  labels:
+    velero.io/change-storage-class: RestoreItemAction
+    velero.io/plugin-config: ''
+  name: {{ resource_modifier_configmap }}
+  namespace: velero

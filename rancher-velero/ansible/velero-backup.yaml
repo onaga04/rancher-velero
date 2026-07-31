@@ -1,0 +1,126 @@
+- name: Velero Backup Playbook
+  hosts: source_cluster
+  become: yes
+  gather_facts: no
+  vars_files:
+    - group_vars/all.yaml
+
+  tasks:
+    - name: Log in to Azure
+      include_tasks:
+        file: tasks/common/azure_login.yml
+        apply:
+          become: false
+          tags:
+            - Log_in_to_Azure
+      tags:
+        - Log_in_to_Azure
+
+    - name: Install Velero for CSI Backup
+      include_tasks:
+        file: tasks/common/install_velero_csi.yml
+        apply:
+          become: false
+          tags:
+            - Install_Velero_for_CSI_Backup
+      tags:
+        - Install_Velero_for_CSI_Backup
+
+    - name: Install Velero for FSBackup
+      include_tasks:
+        file: tasks/common/install_velero_fsbackup.yml
+        apply:
+          become: false
+          tags:
+            - Install_Velero_for_FSBackup
+      tags:
+        - Install_Velero_for_FSBackup
+
+    - name: Setup snapshot class for Velero
+      include_tasks:
+        file: tasks/backup/setup_snapshotclass.yml
+        apply:
+          become: false
+          tags: 
+            - Setup_snapshot_class_for_Velero
+      loop: "{{ csi_drivers }}"
+      loop_control:
+        loop_var: driver_item
+      tags:
+        - Setup_snapshot_class_for_Velero
+
+    - name: Velero CRDs backup
+      include_tasks:
+        file: tasks/backup/backup_crds.yml
+        apply:
+          become: false
+          tags: 
+            - Velero_CRDs_backup
+      tags:
+        - Velero_CRDs_backup
+
+    - name: Velero cluster scoped dependencies backup
+      include_tasks:
+        file: tasks/backup/backup_cluster_dependencies.yml
+        apply:
+          become: false
+          tags: 
+            - Velero_cluster_scoped_dependencies_backup
+      tags:
+        - Velero_cluster_scoped_dependencies_backup
+
+    - name: Capture Cluster State
+      ansible.builtin.shell: "kubectl get pods -A > files/backup_states/cluster_state"
+      changed_when: false
+      become: false
+      tags:
+        - Capture_Cluster_State
+
+    - name: Gather Workload Info Only
+      include_tasks:
+        file: tasks/backup/workload_info.yml
+        apply:
+          become: false
+          tags: 
+            - Gather_Workload_Info_Only
+      tags:
+        - Gather_Workload_Info_Only
+
+    - name: Scale Workloads to zero
+      include_tasks:
+        file: tasks/backup/scale_workloads.yml
+        apply:
+          become: false
+          tags: 
+            - Scale_Workloads_to_zero
+      tags:
+        - Scale_Workloads_to_zero
+
+
+    - name: Wait for pods to terminate
+      kubernetes.core.k8s_info:
+        kind: Pod
+      register: remaining_pods
+      until: >
+        remaining_pods.resources | 
+        selectattr('metadata.namespace', 'in', included_namespaces.split(',')) | 
+        list | length == 0
+      retries: 30
+      delay: 10
+      tags:
+        - Wait_for_pods_to_terminate
+
+    - name: Velero namespaced resources backup
+      include_tasks:
+        file: tasks/backup/backup_namespaced_resources.yml
+        apply:
+          become: false
+          tags: 
+            - Velero_namespaced_resources_backup
+      tags:
+        - Velero_namespaced_resources_backup
+
+
+
+
+

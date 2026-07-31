@@ -1,0 +1,65 @@
+- name: Mark default tokens and tiller configs to be ignored by Velero
+  ansible.builtin.shell: |
+    # Label default tokens matching the pattern and tiller configmaps
+    kubectl get secrets -n {{ included_namespaces }} -o name | grep "default-token-" | xargs -I {} kubectl label {} -n {{ included_namespaces }} velero.io/exclude-from-backup=true --overwrite
+    kubectl label configmaps -n {{ included_namespaces }} -l OWNER=TILLER velero.io/exclude-from-backup=true --overwrite
+  failed_when: false 
+       
+
+
+#- name: Create Velero Resource Policy ConfigMap
+#  kubernetes.core.k8s:
+#    state: present
+#    definition:
+#      apiVersion: v1
+#      kind: ConfigMap
+#      metadata:
+#        name: backup-resource-policies
+#        namespace: velero
+#        labels:
+#          velero.io/resource-policy: "true"
+#      data:
+#        policies: |
+#          version: v1
+#          volumePolicies:
+#          - action:
+#              type: skip
+#            conditions:
+#              storageClass: {{ velero_skip_storage_classes.split(',') | map('trim') | list | to_json }}
+#          - action:
+#              type: fs-backup
+#            conditions:
+#              storageClass: {{ velero_fs_storage_classes.split(',') | map('trim') | list | to_json }}
+
+
+- name: Backup Namespaced Workloads
+  ansible.builtin.command: >
+    {{ velero_bin_path | default('velero') }} backup create {{ backup_name_workload }}
+    --include-namespaces {{ included_namespaces }}
+    --exclude-resources events,replicasets,endpoints,endpointslices,orders.acme.cert-manager.io,challenges.acme.cert-manager.io,certificaterequests.cert-manager.io
+    --snapshot-volumes={{ snapshot_volumes | default(true) | lower }}
+    --resource-policies-configmap=backup-resource-policies
+    {% if snapshot_move_data %} --snapshot-move-data {% endif%}
+  poll: "{{ poll_interval }}"
+  register: velero_backup_namespaced_result
+  changed_when: "'completed' in velero_backup_namespaced_result.stdout or 'created' in velero_backup_namespaced_result.stdout"
+
+#    {% if --default-volumes-to-fs-backup %} --default-volumes-to-fs-backup {% endif%}
+
+#    --selector velero.io/backup=true
+#    --resource-policies-configmap=backup-resource-policies
+#    --exclude-resources pods,events,replicasets,endpoints,endpointslices,orders.acme.cert-manager.io,challenges.acme.cert-manager.io,certificaterequests.cert-manager.io,persistentvolumeclaims,statefulsets
+#    --exclude-resources events,replicasets,endpoints,endpointslices,orders.acme.cert-manager.io,challenges.acme.cert-manager.io,certificaterequests.cert-manager.io
+
+- name: Show Velero backup result
+  ansible.builtin.debug:
+    msg: "{{ velero_backup_namespaced_result.stdout }}"
+
+- name: Verify Velero backup status
+  ansible.builtin.command: velero backup describe {{ backup_name_workload }}
+  register: velero_backup_description
+  changed_when: false
+
+- name: Display backup description
+  ansible.builtin.debug:
+    msg: "{{ velero_backup_description.stdout }}"

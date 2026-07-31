@@ -1,0 +1,98 @@
+- name: Create Velero Resource Policy ConfigMap
+  kubernetes.core.k8s:
+    state: present
+    definition:
+      apiVersion: v1
+      kind: ConfigMap
+      metadata:
+        name: velero-restore-config
+        namespace: velero
+        labels:
+          velero.io/plugin-config: "true"
+          velero.io/csi: "plugins"
+      data:
+        restorePVC: |
+          ignoreDelayBinding: true#
+
+
+- name: Create Velero Resource Modifier ConfigMap for All Project IDs
+  kubernetes.core.k8s:
+    state: present
+    definition:
+      apiVersion: v1
+      kind: ConfigMap
+      metadata:
+        name: project-modifiers
+        namespace: velero
+      data:
+        config.yaml: |
+          version: v1
+          resourceModifierRules:
+          {% for mapping in project_mappings %}
+          - conditions:
+              groupResource: networkpolicies.networking.k8s.io
+            patches:
+              - operation: test
+                path: /metadata/labels/field.cattle.io~1projectId
+                value: "{{ mapping.old }}"
+              - operation: replace
+                path: /metadata/labels/field.cattle.io~1projectId
+                value: "{{ mapping.new }}"
+          {% for i in range(0, 3) %}  
+          - conditions:  
+              groupResource: networkpolicies.networking.k8s.io  
+            patches:  
+              - operation: test  
+                path: /spec/ingress/{{ i }}/from/0/namespaceSelector/matchLabels/field.cattle.io~1projectId  
+                value: "{{ mapping.old }}"  
+              - operation: replace  
+                path: /spec/ingress/{{ i }}/from/0/namespaceSelector/matchLabels/field.cattle.io~1projectId  
+                value: "{{ mapping.new }}"  
+          {% endfor %}
+          {% for e in range(0, 3) %}  
+          - conditions:  
+              groupResource: networkpolicies.networking.k8s.io  
+            patches:  
+              - operation: test  
+                path: /spec/egress/{{ e }}/to/0/namespaceSelector/matchLabels/field.cattle.io~1projectId  
+                value: "{{ mapping.old }}"  
+              - operation: replace  
+                path: /spec/egress/{{ e }}/to/0/namespaceSelector/matchLabels/field.cattle.io~1projectId  
+                value: "{{ mapping.new }}"  
+          {% endfor %}  
+          {% endfor %}
+
+
+
+
+
+- name: Velero restore for Namespaced Resources
+  ansible.builtin.command: >
+    {{ velero_bin_path | default('velero') }}  restore create {{ restore_name_workload }}
+    --from-backup {{ backup_name_workload }}
+    {% if wait_for_restore %} --wait {% endif %}
+  async: "{{ async_timeout }}"
+  poll: "{{ poll_interval }}"
+  register: velero_restore_namespaced_result
+  changed_when: "'completed' in velero_restore_namespaced_result.stdout or 'created' in velero_restore_namespaced_result.stdout"
+
+#     --resource-modifier-configmap velero-restore-config
+#    --resource-modifier-configmap project-modifiers
+
+- name: Show Velero restore result
+  ansible.builtin.debug:
+    msg: "{{ velero_restore_namespaced_result.stdout }}"
+
+- name: Verify Velero restore status
+  ansible.builtin.command: velero restore describe {{ restore_name_workload }}
+  register: velero_restore_description
+  changed_when: false
+
+- name: Display restore description
+  ansible.builtin.debug:
+    msg: "{{ velero_restore_description.stdout }}"
+
+
+
+
+

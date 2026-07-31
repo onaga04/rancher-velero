@@ -1,0 +1,52 @@
+
+Recommendations
+
+1 Opt for filesystem backup for all volumes if majority of volumes in included namespaces do not support CSI snapshots for simplicity
+
+2. Check that the source storage class is present on the target. If a new storage class is required, make sure to create the storageclass configmap
+
+3. Volumesnapshotclasses are needed for CSI snapshot backups
+
+4. When backups are taken using kopia, backup volumes can be found in PodVolumeBackups, and restored volumes in PodVolumeRestores
+
+5. When backups are taken using CSI, backup volumes can be found in DataUploads, and restored volumes in DataDownloads
+
+6. If workloads are scaled down when  CSI backups are taken, the volumes will read as accepted in DataDownloads, but PVs won't be created until the workloads are scaled to the desired state
+
+7. CSI volume snapshots can be taken whether workloads are running or not, however; it is recommended to scale workloads down for data integrity
+
+8. Filesystem backups can only be taken when workloads are running. An approach would be to take 2 sets of backups:
+
+    i. Scale down all workloads to flush memory to disk
+
+    ii. Take 1st backup -  #    --exclude-resources pods,events,replicasets,endpoints,endpointslices,orders.acme.cert-manager.io,challenges.acme.cert-manager.io,certificaterequests.cert-manager.io,persistentvolumeclaims,statefulsets
+
+    iii. Scale up only statefulsets to desired workload count
+
+    iv. Take 2nd backup - #    --exclude-resources events,replicasets,endpoints,endpointslices,orders.acme.cert-manager.io,challenges.acme.cert-manager.io,certificaterequests.cert-manager.io
+
+    On the restore side
+
+     i. Restore first backup
+
+     ii. Restore second backup
+
+9. Set snapshot_volumes and snapshot_move_data to true if taking CSI snapshots, else set to false
+
+10. Set default-volumes-to-fs-backup to true if taking file-system backups
+
+11. If only few resources need to be moved over, an option would be to label each resource with velero.io/backup=true and enable that selector in the backup command 
+
+--selector velero.io/backup=true, but be sure to label all related resources for pods/ volumes so as not to encounter a restore failure
+
+12. If restore is corrupted, you will need to delete corrupted resources and restore again, as Velero skips actions on resources that it marks as present
+
+13. You cannot reuse the same backup or restore name unless you delete those objects from the storage backend
+
+14. If there are network policies to be transformed, you must include the --resource-modifier-configmap project-modifiers  flag to the restore command
+
+15. To see the progress of the volumebacups/datauploads run - velero backup/restore describe BACKUPNAME/RESTORENAME --details
+
+16. In case of backup/restore failure run - velero backup/restore logs BACKUPNAME/RESTORENAME  | grep -E "error|fail"
+
+

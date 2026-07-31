@@ -1,0 +1,100 @@
+- name: Velero Restore Playbook
+  hosts: target_cluster
+  become: yes
+  gather_facts: no
+  vars_files:
+    - group_vars/all.yaml
+    
+  tasks:
+    - name: Log in to Azure
+      include_tasks:
+        file: tasks/common/azure_login.yml
+        apply:
+          become: false
+          tags:
+            - Log_in_to_Azure
+      tags:
+        - Log_in_to_Azure
+
+    - name: Install Velero for CSI Backup
+      include_tasks:
+        file: tasks/common/install_velero_csi.yml
+        apply:
+          become: false
+          tags:
+            - Install_Velero_for_CSI_Backup
+      tags:
+        - Install_Velero_for_CSI_Backup
+
+    - name: Install Velero for FSBackup
+      include_tasks:
+        file: tasks/common/install_velero_fsbackup.yml
+        apply:
+          become: false
+          tags:
+            - Install_Velero_for_FSBackup
+      tags:
+        - Install_Velero_for_FSBackup
+
+
+    - name: Setup configmap
+      include_tasks: 
+        file: tasks/restore/setup_configmap.yml
+        apply:
+          become: false
+          tags: 
+            - Setup_configmap
+      tags: 
+        - Setup_configmap
+
+    - name: Velero CRDs restore
+      include_tasks:
+        file: tasks/restore/restore_crds.yml
+        apply:
+          become: false
+          tags: 
+            - Velero_CRDs_restore
+      tags: 
+        - Velero_CRDs_restore
+
+    - name: Velero cluster scoped dependencies restore
+      include_tasks:
+        file: tasks/restore/restore_cluster_dependencies.yml
+        apply:
+          become: false
+          tags: 
+            - Velero_cluster_scoped_dependencies_restore
+      tags: 
+        - Velero_cluster_scoped_dependencies_restore
+
+    - name: Assign Namespace to Rancher Project
+      kubernetes.core.k8s:
+        state: patched
+        definition:
+          apiVersion: v1
+          kind: Namespace
+          metadata:
+            name: "{{ ns_name }}"
+            annotations:
+              field.cattle.io/projectId: "{{ rancher_cluster_id }}:{{ rancher_project_id }}"
+            labels:
+              field.cattle.io/projectId: "{{ rancher_project_id }}"
+              management.cattle.io/project-id: "{{ rancher_project_id }}"
+      loop: "{{ included_namespaces.split(',') | map('trim') | list }}"
+      loop_control:
+        loop_var: ns_name
+      when: included_namespaces is defined
+      become: false  
+      tags:
+        - Assign_Namespace_to_Rancher_Project
+
+    - name: Velero namespaced resources restore
+      include_tasks:
+        file: tasks/restore/restore_namespaced_resources.yml
+        apply:
+          become: false
+          tags: 
+            - Velero_namespaced_resources_restore
+      tags: 
+        - Velero_namespaced_resources_restore
+
